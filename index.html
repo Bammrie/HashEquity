@@ -1,33 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>HashEquity</title>
   <style>
     body { background: black; color: white; text-align: center; }
-    #gameCanvas { background: #222; display: block; margin: auto; }
+    canvas { background: #222; display: block; margin: auto; }
   </style>
 </head>
 <body>
   <h1>HashEquity</h1>
-
   <div id="auth">
     <input type="text" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
     <button onclick="signup()">Sign Up</button>
     <button onclick="login()">Log In</button>
   </div>
+  <p id="balances">Unminted HASH: 0 | HASH: 0</p>
+  <p id="countdown"></p>
+  <p id="score">Score: 0</p>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
 
-  <div id="userInfo" style="display:none;">
-    <p>Logged in as: <span id="userEmail"></span></p>
-    <p>Unminted HASH: <span id="unmintedHash">0</span></p>
-    <p>HASH Balance: <span id="hashBalance">0</span></p>
-    <p>Next Mint: <span id="countdown"></span></p>
-  </div>
+<script>
+  let score = 0;
+  let token = localStorage.getItem("token");
 
-  <p>Score: <span id="score">0</span></p>
-  <canvas id="gameCanvas" width="800" height="500"></canvas>
+  // Signup
+  async function signup() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-  <script src="script.js"></script>
+    const res = await fetch("/api/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    alert(data.message);
+  }
+
+  // Login
+  async function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      token = data.token;
+      document.getElementById("auth").style.display = "none";
+      alert("Logged in!");
+    } else {
+      alert(data.message);
+    }
+  }
+
+  // Report destroy
+  async function reportDestroy(points) {
+    if (!token) return;
+    await fetch("/api/destroy", {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({ score: points })
+    });
+  }
+
+  // Countdown to midnight UTC
+  function updateCountdown() {
+    const now = new Date();
+    const nextMidnight = new Date();
+    nextMidnight.setUTCHours(24, 0, 0, 0);
+    const diff = nextMidnight - now;
+
+    const hours = Math.floor(diff / 1000 / 60 / 60);
+    const minutes = Math.floor((diff / 1000 / 60) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    document.getElementById("countdown").innerText = 
+      `Next Mint in ${hours}h ${minutes}m ${seconds}s`;
+  }
+  setInterval(updateCountdown, 1000);
+
+  // Game rendering
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
+
+  function drawCircle(x, y, r) {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = "lime";
+    ctx.fill();
+    ctx.closePath();
+  }
+
+  let circles = [];
+  function spawnCircles() {
+    circles = [];
+    for (let i = 0; i < 20; i++) {
+      circles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: 15
+      });
+    }
+  }
+
+  canvas.addEventListener("click", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    circles = circles.filter(c => {
+      const dist = Math.hypot(mouseX - c.x, mouseY - c.y);
+      if (dist < c.r) {
+        score++;
+        document.getElementById("score").innerText = "Score: " + score;
+        reportDestroy(1);
+        return false;
+      }
+      return true;
+    });
+  });
+
+  function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    circles.forEach(c => drawCircle(c.x, c.y, c.r));
+    requestAnimationFrame(gameLoop);
+  }
+
+  spawnCircles();
+  setInterval(spawnCircles, 3000);
+  gameLoop();
+</script>
 </body>
 </html>
