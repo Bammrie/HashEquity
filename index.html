@@ -1,169 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>HashEquity</title>
   <style>
-    body { background: black; color: white; text-align: center; font-family: Arial; }
-    #gameCanvas { background: #222; display: block; margin: 20px auto; }
+    body { background: black; color: white; text-align: center; }
+    #gameCanvas { background: #222; display: block; margin: auto; }
   </style>
 </head>
 <body>
   <h1>HashEquity</h1>
 
-  <div id="auth-section">
-    <input type="email" id="email" placeholder="Email">
+  <div id="auth">
+    <input type="text" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
     <button onclick="signup()">Sign Up</button>
     <button onclick="login()">Log In</button>
   </div>
 
-  <div id="user-section" style="display:none;">
-    <p>Welcome, <span id="userEmail"></span></p>
-    <p>Unminted HASH: <span id="unmintedBalance">0</span></p>
+  <div id="userInfo" style="display:none;">
+    <p>Logged in as: <span id="userEmail"></span></p>
+    <p>Unminted HASH: <span id="unmintedHash">0</span></p>
     <p>HASH Balance: <span id="hashBalance">0</span></p>
-    <p>Minting in: <span id="countdown"></span></p>
-    <button onclick="logout()">Log Out</button>
+    <p>Next Mint: <span id="countdown"></span></p>
   </div>
 
+  <p>Score: <span id="score">0</span></p>
   <canvas id="gameCanvas" width="800" height="500"></canvas>
 
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script>
-    const API_BASE = "https://hash-backend-production.up.railway.app";
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    let token = localStorage.getItem("token");
-    let score = 0;
-    let objects = [];
-
-    async function signup() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const res = await fetch(`${API_BASE}/signup`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (data.token) {
-        token = data.token;
-        localStorage.setItem("token", token);
-        loadUser();
-      } else alert(data.message);
-    }
-
-    async function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const res = await fetch(`${API_BASE}/login`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (data.token) {
-        token = data.token;
-        localStorage.setItem("token", token);
-        loadUser();
-      } else alert(data.message);
-    }
-
-    function logout() {
-      localStorage.removeItem("token");
-      token = null;
-      document.getElementById("auth-section").style.display = "block";
-      document.getElementById("user-section").style.display = "none";
-    }
-
-    async function loadUser() {
-      if (!token) return;
-      const res = await fetch(`${API_BASE}/me`, {
-        headers: { Authorization: "Bearer " + token }
-      });
-      const user = await res.json();
-      if (user.email) {
-        document.getElementById("auth-section").style.display = "none";
-        document.getElementById("user-section").style.display = "block";
-        document.getElementById("userEmail").innerText = user.email;
-        document.getElementById("unmintedBalance").innerText = user.unmintedHash;
-        loadHashBalance(user.email);
-      }
-    }
-
-    // Example: read token balance from your HASH contract
-    async function loadHashBalance(userAddress) {
-      const provider = new ethers.providers.JsonRpcProvider("https://rpc.ankr.com/eth_sepolia"); // update to your chain
-      const contractAddress = "YOUR_HASH_CONTRACT_ADDRESS"; // replace with deployed HASH
-      const abi = [ "function balanceOf(address owner) view returns (uint256)" ];
-      const contract = new ethers.Contract(contractAddress, abi, provider);
-      try {
-        const bal = await contract.balanceOf(userAddress);
-        document.getElementById("hashBalance").innerText = ethers.utils.formatUnits(bal, 18);
-      } catch (e) {
-        console.error(e);
-        document.getElementById("hashBalance").innerText = "0";
-      }
-    }
-
-    // Countdown to 00:00 UTC
-    function updateCountdown() {
-      const now = new Date();
-      const utcNow = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-      const midnightUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0);
-      const diff = midnightUTC - utcNow;
-
-      const hours = Math.floor(diff / 1000 / 60 / 60);
-      const minutes = Math.floor((diff / 1000 / 60) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-
-      document.getElementById("countdown").innerText = `${hours}h ${minutes}m ${seconds}s`;
-    }
-    setInterval(updateCountdown, 1000);
-
-    // Game logic
-    function spawnObject() {
-      objects.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: 15 });
-    }
-
-    function drawObjects() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "lime";
-      for (const o of objects) {
-        ctx.beginPath();
-        ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    canvas.addEventListener("click", async (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      for (let i = 0; i < objects.length; i++) {
-        const o = objects[i];
-        const dx = x - o.x, dy = y - o.y;
-        if (Math.sqrt(dx * dx + dy * dy) < o.r) {
-          objects.splice(i, 1);
-          score++;
-          if (token) {
-            await fetch(`${API_BASE}/destroy`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-              body: JSON.stringify({ objectId: Date.now().toString() })
-            });
-            loadUser();
-          }
-          break;
-        }
-      }
-    });
-
-    setInterval(spawnObject, 1000);
-    setInterval(drawObjects, 50);
-
-    // Load user if logged in
-    loadUser();
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
