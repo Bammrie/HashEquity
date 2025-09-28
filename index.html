@@ -10,6 +10,8 @@
 </head>
 <body>
   <h1>HashEquity</h1>
+
+  <!-- Auth Box -->
   <div id="auth">
     <input type="text" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
@@ -17,9 +19,12 @@
     <button onclick="login()">Log In</button>
   </div>
 
+  <!-- User Panel -->
   <div id="userPanel" style="display:none;">
+    <p>Welcome, <span id="userEmail"></span></p>
     <p>Unminted HASH: <span id="unminted">0</span> | HASH: <span id="hash">0</span></p>
     <p id="countdown"></p>
+    <button onclick="logout()">Log Out</button>
   </div>
 
   <p>Score: <span id="score">0</span></p>
@@ -27,37 +32,50 @@
 
   <script>
     const API_BASE = "https://hash-backend-production.up.railway.app/api";
-    let token = null;
+    let token = localStorage.getItem("token") || null;
     let score = 0;
 
-   async function signup() {
-  ...
-  const data = await res.json();
-  if (res.ok) {
-    token = data.token;
-    localStorage.setItem("token", token);
-    showUserPanel();
-    alert(data.message); // ✅ Will say "Signup successful"
-  } else {
-    alert(data.error || "Signup failed");
-  }
-}
+    async function signup() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const res = await fetch(`${API_BASE}/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        token = data.token;
+        localStorage.setItem("token", token);
+        showUserPanel(data.email);
+        alert(data.message);
+      } else {
+        alert(data.error || "Signup failed");
+      }
+    }
 
     async function login() {
-  ...
-  const data = await res.json();
-  if (res.ok) {
-    token = data.token;
-    localStorage.setItem("token", token);
-    showUserPanel();
-    fetchBalances();
-    alert(data.message); // ✅ Will say "Login successful"
-  } else {
-    alert(data.error || "Login failed");
-  }
-}
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        token = data.token;
+        localStorage.setItem("token", token);
+        showUserPanel(data.email);
+        fetchBalances();
+        alert(data.message);
+      } else {
+        alert(data.error || "Login failed");
+      }
+    }
 
     async function fetchBalances() {
+      if (!token) return;
       const res = await fetch(`${API_BASE}/game/balances`, {
         headers: { "Authorization": token }
       });
@@ -68,9 +86,18 @@
       }
     }
 
-    function showUserPanel() {
+    function showUserPanel(email) {
       document.getElementById("auth").style.display = "none";
       document.getElementById("userPanel").style.display = "block";
+      document.getElementById("userEmail").innerText = email;
+      fetchBalances();
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      token = null;
+      document.getElementById("auth").style.display = "block";
+      document.getElementById("userPanel").style.display = "none";
     }
 
     // Countdown to daily mint
@@ -86,6 +113,7 @@
         document.getElementById("countdown").innerText =
           `Next Mint in ${hours}h ${minutes}m ${seconds}s`;
       }
+      updateCountdown();
       setInterval(updateCountdown, 1000);
     }
     startCountdown();
@@ -141,6 +169,12 @@
 
     setInterval(spawnCircle, 1000);
     setInterval(drawCircles, 50);
+
+    // Auto-login if token exists
+    if (token) {
+      showUserPanel("Returning User");
+      fetchBalances();
+    }
   </script>
 </body>
 </html>
