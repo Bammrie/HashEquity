@@ -1,6 +1,5 @@
 import API_BASE_URL from "./config.js";
 
-let score = 0;
 let token = localStorage.getItem("token");
 
 // Signup
@@ -11,7 +10,7 @@ async function signup() {
   const res = await fetch(`${API_BASE_URL}/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
   });
   const data = await res.json();
   alert(data.message);
@@ -25,7 +24,7 @@ async function login() {
   const res = await fetch(`${API_BASE_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password }),
   });
   const data = await res.json();
 
@@ -39,20 +38,19 @@ async function login() {
   }
 }
 
-// Report destroy
+// Report destroys
 async function reportDestroy(points) {
   if (!token) return;
   await fetch(`${API_BASE_URL}/destroy`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer " + token
+      Authorization: "Bearer " + token,
     },
-    body: JSON.stringify({ score: points })
+    body: JSON.stringify({ score: points }),
   });
 }
 
-// Export to global scope
 window.signup = signup;
 window.login = login;
 window.reportDestroy = reportDestroy;
