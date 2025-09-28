@@ -4,60 +4,153 @@
   <meta charset="UTF-8">
   <title>HashEquity</title>
   <style>
-    body {
-      background-color: black;
-      color: white;
-      text-align: center;
-      font-family: Arial, sans-serif;
-    }
-    canvas {
-      background-color: #222;
-      display: block;
-      margin: 20px auto;
-    }
-    #authForm, #profileBox {
-      margin: 10px auto;
-      padding: 10px;
-      background: #111;
-      border: 1px solid #444;
-      border-radius: 8px;
-      display: inline-block;
-    }
-    input {
-      margin: 5px;
-      padding: 5px;
-    }
-    button {
-      margin: 5px;
-      padding: 5px 10px;
-      cursor: pointer;
-    }
+    body { background: black; color: white; text-align: center; font-family: Arial, sans-serif; }
+    canvas { background: #222; display: block; margin: 20px auto; }
   </style>
 </head>
 <body>
   <h1>HashEquity</h1>
-
-  <!-- Login/Signup -->
-  <div id="authForm">
-    <input type="email" id="email" placeholder="Email">
+  <div id="auth">
+    <input type="text" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
     <button onclick="signup()">Sign Up</button>
     <button onclick="login()">Log In</button>
   </div>
 
-  <!-- Profile Box (hidden until logged in) -->
-  <div id="profileBox" style="display: none;">
-    <p id="welcomeText"></p>
-    <p>Unminted HASH: <span id="unmintedHash">0</span></p>
-    <p>HASH: <span id="hashBalance">0</span></p>
+  <div id="userPanel" style="display:none;">
+    <p>Unminted HASH: <span id="unminted">0</span> | HASH: <span id="hash">0</span></p>
     <p id="countdown"></p>
-    <button onclick="logout()">Log Out</button>
   </div>
 
-  <!-- Game Score -->
-  <p id="score">Score: 0</p>
-  <canvas id="gameCanvas" width="800" height="500"></canvas>
+  <p>Score: <span id="score">0</span></p>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
 
-  <script src="script.js"></script>
+  <script>
+    const API_BASE = "https://hash-backend-production.up.railway.app/api";
+    let token = null;
+    let score = 0;
+
+    async function signup() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const res = await fetch(`${API_BASE}/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        token = data.token;
+        localStorage.setItem("token", token);
+        showUserPanel();
+      } else {
+        alert(data.error || "Signup failed");
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        token = data.token;
+        localStorage.setItem("token", token);
+        showUserPanel();
+        fetchBalances();
+      } else {
+        alert(data.error || "Login failed");
+      }
+    }
+
+    async function fetchBalances() {
+      const res = await fetch(`${API_BASE}/game/balances`, {
+        headers: { "Authorization": token }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById("unminted").innerText = data.unmintedHash || 0;
+        document.getElementById("hash").innerText = data.hashBalance || 0;
+      }
+    }
+
+    function showUserPanel() {
+      document.getElementById("auth").style.display = "none";
+      document.getElementById("userPanel").style.display = "block";
+    }
+
+    // Countdown to daily mint
+    function startCountdown() {
+      function updateCountdown() {
+        const now = new Date();
+        const nextMint = new Date();
+        nextMint.setUTCHours(24, 0, 0, 0);
+        const diff = nextMint - now;
+        const hours = Math.floor(diff / 1000 / 60 / 60);
+        const minutes = Math.floor((diff / 1000 / 60) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        document.getElementById("countdown").innerText =
+          `Next Mint in ${hours}h ${minutes}m ${seconds}s`;
+      }
+      setInterval(updateCountdown, 1000);
+    }
+    startCountdown();
+
+    // Game logic
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    let circles = [];
+
+    function spawnCircle() {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      circles.push({ x, y, r: 10 });
+    }
+
+    function drawCircles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "lime";
+      circles.forEach(c => {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    canvas.addEventListener("click", async (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      for (let i = 0; i < circles.length; i++) {
+        const c = circles[i];
+        const dx = x - c.x;
+        const dy = y - c.y;
+        if (Math.sqrt(dx * dx + dy * dy) < c.r) {
+          circles.splice(i, 1);
+          score++;
+          document.getElementById("score").innerText = score;
+          if (token) {
+            await fetch(`${API_BASE}/game/destroy`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": token
+              },
+              body: JSON.stringify({ objectId: Date.now().toString() })
+            });
+            fetchBalances();
+          }
+          break;
+        }
+      }
+    });
+
+    setInterval(spawnCircle, 1000);
+    setInterval(drawCircles, 50);
+  </script>
 </body>
 </html>
