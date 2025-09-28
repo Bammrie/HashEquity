@@ -2,21 +2,142 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HashEquity</title>
   <style>
-    body { background: black; color: white; text-align: center; }
-    #gameCanvas { background: #222; display: block; margin: auto; }
+    body {
+      margin: 0;
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    canvas {
+      background-color: #222;
+      display: block;
+      margin: 20px auto;
+    }
+    .auth {
+      margin: 10px;
+    }
   </style>
 </head>
 <body>
   <h1>HashEquity</h1>
-  <div id="status">Not logged in</div>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="signup()">Sign Up</button>
-  <button onclick="login()">Log In</button>
+  <div id="auth-section">
+    <span id="status">Not logged in</span><br>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="signup()">Sign Up</button>
+    <button onclick="login()">Log In</button>
+  </div>
   <p>Score: <span id="score">0</span></p>
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
-  <script src="script.js"></script>
+  <canvas id="gameCanvas" width="1000" height="500"></canvas>
+
+  <script>
+    const API_URL = "https://hash-backend-production-a979.up.railway.app"; // update if backend changes
+    let score = 0;
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    let circles = [];
+    const radius = 15;
+
+    function getToken() {
+      return localStorage.getItem("token");
+    }
+
+    function setStatus(msg) {
+      document.getElementById("status").innerText = msg;
+    }
+
+    async function signup() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      const res = await fetch(`${API_URL}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const result = await res.json();
+      alert(result.message || JSON.stringify(result));
+      if (result.token) {
+        localStorage.setItem("token", result.token);
+        setStatus(`Logged in as ${email}`);
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      const res = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const result = await res.json();
+      alert(result.message || JSON.stringify(result));
+      if (result.token) {
+        localStorage.setItem("token", result.token);
+        setStatus(`Logged in as ${email}`);
+      }
+    }
+
+    function spawnCircles(n = 20) {
+      circles = [];
+      for (let i = 0; i < n; i++) {
+        circles.push({
+          x: Math.random() * (canvas.width - radius * 2) + radius,
+          y: Math.random() * (canvas.height - radius * 2) + radius,
+          id: Date.now() + "-" + i
+        });
+      }
+    }
+
+    function drawCircles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "lime";
+      for (const c of circles) {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    canvas.addEventListener("click", async (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      for (let i = 0; i < circles.length; i++) {
+        const c = circles[i];
+        const dx = clickX - c.x;
+        const dy = clickY - c.y;
+        if (dx * dx + dy * dy < radius * radius) {
+          circles.splice(i, 1);
+          score++;
+          document.getElementById("score").innerText = score;
+
+          // send destroy event
+          const token = getToken();
+          await fetch(`${API_URL}/destroy`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: "Bearer " + token } : {})
+            },
+            body: JSON.stringify({ objectId: c.id })
+          });
+
+          break;
+        }
+      }
+    });
+
+    // start game
+    spawnCircles(30);
+    setInterval(drawCircles, 50);
+  </script>
 </body>
 </html>
