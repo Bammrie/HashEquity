@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HashEquity</title>
+  <style>
+    body { background: black; color: white; text-align: center; font-family: sans-serif; }
+    canvas { background: #222; display: block; margin: auto; }
+  </style>
+</head>
+<body>
+  <h1>HashEquity</h1>
+  <p id="status">Not logged in</p>
+  <form id="authForm">
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button type="submit">Sign Up / Log In</button>
+  </form>
+  <p>Score: <span id="score">0</span></p>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <script>
+    const API = "https://your-backend-url.up.railway.app"; // replace with Railway backend URL
+    let token = null, score = 0;
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    let objects = [];
+
+    // Auth
+    document.getElementById("authForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      let res = await fetch(API + "/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      if (res.status !== 200) {
+        res = await fetch(API + "/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        alert("Signed up! Try logging in now.");
+      } else {
+        const data = await res.json();
+        token = data.token;
+        localStorage.setItem("token", token);
+        document.getElementById("status").textContent = "Logged in as " + username;
+      }
+    };
+
+    // Game loop
+    function spawnCircle() {
+      const radius = 20;
+      const x = Math.random() * (canvas.width - 2 * radius) + radius;
+      const y = Math.random() * (canvas.height - 2 * radius) + radius;
+      objects.push({ x, y, radius, type: "circle", id: Date.now() + Math.random() });
+    }
+
+    canvas.addEventListener("click", async (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left, y = e.clientY - rect.top;
+      for (let i = 0; i < objects.length; i++) {
+        const o = objects[i];
+        if (Math.hypot(o.x - x, o.y - y) < o.radius) {
+          objects.splice(i, 1);
+          score++;
+          document.getElementById("score").textContent = score;
+          if (token) {
+            fetch(API + "/destroy", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+              },
+              body: JSON.stringify({ objectType: o.type, objectId: o.id })
+            });
+          }
+          break;
+        }
+      }
+    });
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "lime";
+      objects.forEach(o => ctx.beginPath() || ctx.arc(o.x, o.y, o.radius, 0, Math.PI*2) || ctx.fill());
+    }
+
+    setInterval(spawnCircle, 1000);
+    setInterval(draw, 50);
+  </script>
+</body>
+</html>
