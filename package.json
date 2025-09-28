@@ -1,0 +1,19 @@
+{
+  "name": "hash-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for HashEquity game",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve -s .",
+    "dev": "npx serve -l 3000 -s ."
+  },
+  "dependencies": {
+    "serve": "^14.2.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT"
+}
