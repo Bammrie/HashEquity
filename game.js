@@ -1,59 +1,42 @@
 const API_BASE = "https://api.hashequity.com/api";
 let token = localStorage.getItem("token") || null;
-
-// --- Auth (same as before) ---
-async function signup() { /* unchanged */ }
-async function login() { /* unchanged */ }
-async function fetchBalances() { /* unchanged */ }
-function showUserPanel(email) { /* unchanged */ }
-function logout() { /* unchanged */ }
-
-// --- Countdown (same as before) ---
-function startCountdown() { /* unchanged */ }
-startCountdown();
-
-// --- Game ---
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// ✅ Preload images
-const coinTypes = [
-  { src: "HASH.png", value: 0.0000000100, chance: 0.8 },
-  { src: "HASHBlue.png", value: 0.0000000300, chance: 0.15 },
-  { src: "HASHRed.png", value: 0.0000000500, chance: 0.04 },
-  { src: "HASHGold.png", value: 0.0000001000, chance: 0.009 },
-  { src: "HASHRainbow.png", value: 0.0000025000, chance: 0.001 },
+const objects = [
+  { type: "Base", img: "images/HASH.png", value: 0.0000000100, chance: 0.8 },
+  { type: "Blue", img: "images/HASHBlue.png", value: 0.0000000300, chance: 0.15 },
+  { type: "Red", img: "images/HASHRed.png", value: 0.0000000500, chance: 0.04 },
+  { type: "Gold", img: "images/HASHGold.png", value: 0.0000001000, chance: 0.009 },
+  { type: "Rainbow", img: "images/HASHRainbow.png", value: 0.0000025000, chance: 0.001 }
 ];
 
-coinTypes.forEach(c => {
-  const img = new Image();
-  img.src = c.src;
-  c.image = img; // attach loaded image
-});
+let circles = [];
 
-let objects = [];
-
-function chooseCoin() {
-  let r = Math.random();
+function pickObject() {
+  const rand = Math.random();
   let cumulative = 0;
-  for (let coin of coinTypes) {
-    cumulative += coin.chance;
-    if (r <= cumulative) return coin;
+  for (const obj of objects) {
+    cumulative += obj.chance;
+    if (rand < cumulative) return obj;
   }
-  return coinTypes[0];
+  return objects[0];
 }
 
-function spawnObject() {
-  const coin = chooseCoin();
-  const x = Math.random() * (canvas.width - 30) + 15;
-  const y = Math.random() * (canvas.height - 30) + 15;
-  objects.push({ x, y, r: 15, coin });
+function spawnCircle() {
+  if (circles.length >= 20) return;
+  const obj = pickObject();
+  const x = Math.random() * (canvas.width - 40) + 20;
+  const y = Math.random() * (canvas.height - 40) + 20;
+  const img = new Image();
+  img.src = obj.img;
+  circles.push({ x, y, r: 20, obj, img });
 }
 
-function drawObjects() {
+function drawCircles() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  objects.forEach(obj => {
-    ctx.drawImage(obj.coin.image, obj.x - obj.r, obj.y - obj.r, obj.r * 2, obj.r * 2);
+  circles.forEach(c => {
+    ctx.drawImage(c.img, c.x - c.r, c.y - c.r, c.r * 2, c.r * 2);
   });
 }
 
@@ -61,15 +44,23 @@ canvas.addEventListener("click", async (e) => {
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
-  for (let i = 0; i < objects.length; i++) {
-    const obj = objects[i];
-    if (Math.sqrt((x - obj.x) ** 2 + (y - obj.y) ** 2) < obj.r) {
-      objects.splice(i, 1);
+
+  for (let i = 0; i < circles.length; i++) {
+    const c = circles[i];
+    const dx = x - c.x;
+    const dy = y - c.y;
+    if (Math.sqrt(dx * dx + dy * dy) < c.r) {
+      circles.splice(i, 1);
+      spawnCircle();
+
       if (token) {
         await fetch(`${API_BASE}/game/destroy`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: token },
-          body: JSON.stringify({ value: obj.coin.value }),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": token
+          },
+          body: JSON.stringify({ objectType: c.obj.type, hashValue: c.obj.value })
         });
         fetchBalances();
       }
@@ -78,12 +69,22 @@ canvas.addEventListener("click", async (e) => {
   }
 });
 
-function gameLoop() {
-  while (objects.length < 20) {
-    spawnObject();
+async function fetchBalances() {
+  if (!token) return;
+  const res = await fetch(`${API_BASE}/game/balances`, {
+    headers: { "Authorization": token }
+  });
+  const data = await res.json();
+  if (res.ok) {
+    document.getElementById("unminted").innerText = data.unmintedHash || 0;
+    document.getElementById("hash").innerText = data.hashBalance || 0;
   }
-  drawObjects();
 }
 
-setInterval(gameLoop, 200);
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "index.html";
+}
 
+setInterval(drawCircles, 50);
+setInterval(() => { if (circles.length < 20) spawnCircle(); }, 500);
