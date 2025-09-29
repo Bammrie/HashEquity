@@ -3,147 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <title>HashEquity</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      color: #f0f0f0;
-      text-align: center;
-      background: url("images/f4d3af06-5fe0-457e-a2c5-21ced8573c28.png") no-repeat center center fixed;
-      background-size: cover;
-    }
-
-    h1 {
-      margin: 20px 0;
-      color: #00ffcc;
-      text-shadow: 0 0 10px rgba(0, 255, 204, 0.7);
-    }
-
-    .auth-box, .user-panel {
-      margin: 20px auto;
-      padding: 20px;
-      background: rgba(26, 26, 26, 0.9);
-      border-radius: 8px;
-      max-width: 400px;
-      box-shadow: 0 0 12px rgba(0, 255, 204, 0.4);
-    }
-
-    input, button {
-      margin: 8px;
-      padding: 10px;
-      border: none;
-      border-radius: 4px;
-    }
-
-    input {
-      width: 70%;
-      max-width: 280px;
-    }
-
-    button {
-      background: #00ffcc;
-      color: #000;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background: #00ccaa;
-    }
-
-    h2 {
-      margin-top: 40px;
-      color: #ffcc00;
-      text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
-    }
-
-    table {
-      margin: 20px auto;
-      border-collapse: collapse;
-      width: 90%;
-      max-width: 700px;
-      background: rgba(26, 26, 26, 0.9);
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
-    }
-
-    th, td {
-      padding: 14px;
-      border-bottom: 1px solid #333;
-      text-align: center;
-      font-size: 1.1rem;
-    }
-
-    th {
-      background: #00ffcc;
-      color: #000;
-      font-size: 1.2rem;
-    }
-
-    td img {
-      width: 50px;
-      height: 50px;
-      object-fit: contain;
-      display: block;
-      margin: 0 auto;
-      border-radius: 8px;
-      background: #111;
-      padding: 4px;
-      box-shadow: 0 0 6px rgba(0, 255, 204, 0.5);
-    }
-
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    #countdown {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #ffcc00;
-      text-shadow: 0 0 6px rgba(255, 204, 0, 0.8);
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>HashEquity</h1>
+  <div class="overlay">
+    <h1 class="title">HashEquity</h1>
 
-  <!-- Auth -->
-  <div id="auth" class="auth-box">
-    <input type="text" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <br>
-    <button onclick="signup()">Sign Up</button>
-    <button onclick="login()">Log In</button>
+    <!-- Objects Destroyed Stats -->
+    <section id="stats">
+      <h2>Objects Destroyed</h2>
+      <div id="objectsTable"></div>
+    </section>
+
+    <!-- Auth Box -->
+    <div id="authBox">
+      <input type="text" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="signup()">Sign Up</button>
+      <button onclick="login()">Log In</button>
+    </div>
   </div>
-
-  <!-- User -->
-  <div id="userPanel" class="user-panel" style="display:none;">
-    <p>Welcome, <span id="userEmail"></span></p>
-    <p>Unminted HASH: <span id="unminted">0</span> | HASH: <span id="hash">0</span></p>
-    <p id="countdown"></p>
-    <button onclick="logout()">Log Out</button>
-  </div>
-
-  <!-- Stats -->
-  <h2>Global Destroy Stats</h2>
-  <table id="statsTable">
-    <thead>
-      <tr>
-        <th>Object</th>
-        <th>Destroyed</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td><img src="images/HASH.png" alt="Base"></td><td id="baseCount">0</td></tr>
-      <tr><td><img src="images/HASHBlue.png" alt="Blue"></td><td id="blueCount">0</td></tr>
-      <tr><td><img src="images/HASHRed.png" alt="Red"></td><td id="redCount">0</td></tr>
-      <tr><td><img src="images/HASHGold.png" alt="Gold"></td><td id="goldCount">0</td></tr>
-      <tr><td><img src="images/HASHRainbow.png" alt="Rainbow"></td><td id="rainbowCount">0</td></tr>
-    </tbody>
-  </table>
 
   <script>
     const API_BASE = "https://api.hashequity.com/api";
@@ -152,16 +31,17 @@
     async function signup() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
+
       const res = await fetch(`${API_BASE}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
       });
+
       const data = await res.json();
       if (res.ok) {
-        token = data.token;
-        localStorage.setItem("token", token);
-        showUserPanel(data.email);
+        localStorage.setItem("token", data.token);
+        window.location.href = "game.html"; // redirect after signup
       } else {
         alert(data.error || "Signup failed");
       }
@@ -170,83 +50,22 @@
     async function login() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
+
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
       });
+
       const data = await res.json();
       if (res.ok) {
-        token = data.token;
-        localStorage.setItem("token", token);
-        showUserPanel(data.email);
-        fetchBalances();
+        localStorage.setItem("token", data.token);
+        window.location.href = "game.html"; // redirect after login
       } else {
         alert(data.error || "Login failed");
       }
     }
-
-    function logout() {
-      localStorage.removeItem("token");
-      token = null;
-      document.getElementById("auth").style.display = "block";
-      document.getElementById("userPanel").style.display = "none";
-    }
-
-    function showUserPanel(email) {
-      document.getElementById("auth").style.display = "none";
-      document.getElementById("userPanel").style.display = "block";
-      document.getElementById("userEmail").innerText = email;
-    }
-
-    async function fetchBalances() {
-      if (!token) return;
-      const res = await fetch(`${API_BASE}/game/balances`, {
-        headers: { "Authorization": token }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById("unminted").innerText = data.unmintedHash || 0;
-        document.getElementById("hash").innerText = data.hashBalance || 0;
-      }
-    }
-
-    async function fetchStats() {
-      const res = await fetch(`${API_BASE}/game/stats`);
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById("baseCount").innerText = data.find(d => d.objectType === "base")?.destroyedCount || 0;
-        document.getElementById("blueCount").innerText = data.find(d => d.objectType === "blue")?.destroyedCount || 0;
-        document.getElementById("redCount").innerText = data.find(d => d.objectType === "red")?.destroyedCount || 0;
-        document.getElementById("goldCount").innerText = data.find(d => d.objectType === "gold")?.destroyedCount || 0;
-        document.getElementById("rainbowCount").innerText = data.find(d => d.objectType === "rainbow")?.destroyedCount || 0;
-      }
-    }
-
-    // Countdown to daily mint
-    function startCountdown() {
-      function updateCountdown() {
-        const now = new Date();
-        const nextMint = new Date();
-        nextMint.setUTCHours(24, 0, 0, 0);
-        const diff = nextMint - now;
-        const h = Math.floor(diff / 1000 / 60 / 60);
-        const m = Math.floor((diff / 1000 / 60) % 60);
-        const s = Math.floor((diff / 1000) % 60);
-        document.getElementById("countdown").innerText = `Next Mint in ${h}h ${m}m ${s}s`;
-      }
-      updateCountdown();
-      setInterval(updateCountdown, 1000);
-    }
-
-    startCountdown();
-    fetchStats();
-    setInterval(fetchStats, 10000);
-
-    if (token) {
-      showUserPanel("Returning User");
-      fetchBalances();
-    }
   </script>
 </body>
 </html>
+
