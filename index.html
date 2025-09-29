@@ -2,72 +2,85 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>HashEquity - Login</title>
+  <title>HashEquity</title>
   <style>
     body {
-      background: black;
-      color: white;
+      background: #0d0d0d;
+      color: #f0f0f0;
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 0;
       padding: 0;
     }
-    h1 { margin-top: 40px; }
-    .login-box {
-      margin: 30px auto;
-      background: #111;
-      padding: 20px;
-      border-radius: 12px;
-      width: 300px;
-      box-shadow: 0 0 10px rgba(0,255,0,0.4);
+
+    h1 {
+      margin: 20px 0;
+      color: #00ffcc;
     }
-    input {
-      margin: 10px;
+
+    .auth-box, .user-panel {
+      margin: 20px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      max-width: 400px;
+      box-shadow: 0 0 12px rgba(0, 255, 204, 0.2);
+    }
+
+    input, button {
+      margin: 8px;
       padding: 10px;
-      width: 90%;
-      border-radius: 6px;
       border: none;
+      border-radius: 4px;
     }
+
     button {
-      margin: 10px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      background: limegreen;
-      color: black;
-      font-weight: bold;
+      background: #00ffcc;
+      color: #000;
       cursor: pointer;
+      font-weight: bold;
     }
+
     button:hover {
-      background: #32cd32;
+      background: #00ccaa;
     }
-    .stats {
-      margin: 40px auto;
-      width: 90%;
-      max-width: 900px;
-    }
+
     table {
-      width: 100%;
+      margin: 20px auto;
       border-collapse: collapse;
+      width: 80%;
+      max-width: 600px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 12px rgba(0, 255, 204, 0.2);
     }
-    th {
-      font-size: 1.2em;
-      padding: 15px;
-      border-bottom: 2px solid limegreen;
-    }
-    td {
-      padding: 20px;
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #333;
       text-align: center;
     }
-    td img {
-      width: 50px;
-      display: block;
-      margin: 0 auto 10px;
+
+    th {
+      background: #00ffcc;
+      color: #000;
     }
-    td span {
-      font-size: 1.1em;
+
+    td img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    #countdown {
+      margin-top: 10px;
       font-weight: bold;
-      color: #00ffcc;
+      color: #ffcc00;
     }
   </style>
 </head>
@@ -75,19 +88,43 @@
   <h1>HashEquity</h1>
 
   <!-- Auth -->
-  <div class="login-box" id="authBox">
-    <input type="text" id="email" placeholder="Email"><br>
-    <input type="password" id="password" placeholder="Password"><br>
+  <div id="auth" class="auth-box">
+    <input type="text" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <br>
     <button onclick="signup()">Sign Up</button>
     <button onclick="login()">Log In</button>
   </div>
 
+  <!-- User -->
+  <div id="userPanel" class="user-panel" style="display:none;">
+    <p>Welcome, <span id="userEmail"></span></p>
+    <p>Unminted HASH: <span id="unminted">0</span> | HASH: <span id="hash">0</span></p>
+    <p id="countdown"></p>
+    <button onclick="logout()">Log Out</button>
+  </div>
+
   <!-- Stats -->
-  <div class="stats" id="statsBox"></div>
+  <h2>Global Destroy Stats</h2>
+  <table id="statsTable">
+    <thead>
+      <tr>
+        <th>Object</th>
+        <th>Destroyed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><img src="images/HASH.png" alt="Base"></td><td id="baseCount">0</td></tr>
+      <tr><td><img src="images/HASHBlue.png" alt="Blue"></td><td id="blueCount">0</td></tr>
+      <tr><td><img src="images/HASHRed.png" alt="Red"></td><td id="redCount">0</td></tr>
+      <tr><td><img src="images/HASHGold.png" alt="Gold"></td><td id="goldCount">0</td></tr>
+      <tr><td><img src="images/HASHRainbow.png" alt="Rainbow"></td><td id="rainbowCount">0</td></tr>
+    </tbody>
+  </table>
 
   <script>
     const API_BASE = "https://api.hashequity.com/api";
-    let token = localStorage.getItem("token");
+    let token = localStorage.getItem("token") || null;
 
     async function signup() {
       const email = document.getElementById("email").value;
@@ -101,7 +138,7 @@
       if (res.ok) {
         token = data.token;
         localStorage.setItem("token", token);
-        window.location.href = "game.html";
+        showUserPanel(data.email);
       } else {
         alert(data.error || "Signup failed");
       }
@@ -119,44 +156,74 @@
       if (res.ok) {
         token = data.token;
         localStorage.setItem("token", token);
-        window.location.href = "game.html";
+        showUserPanel(data.email);
+        fetchBalances();
       } else {
         alert(data.error || "Login failed");
       }
     }
 
-    // Load global stats in table format
-    async function loadStats() {
-      const res = await fetch(`${API_BASE}/game/stats`);
-      const stats = await res.json();
-
-      const objectData = {
-        base: { img: "images/HASH.png", label: "Base" },
-        blue: { img: "images/HASHBlue.png", label: "Blue" },
-        red: { img: "images/HASHRed.png", label: "Red" },
-        gold: { img: "images/HASHGold.png", label: "Gold" },
-        rainbow: { img: "images/HASHRainbow.png", label: "Rainbow" }
-        // ⚡ If you add more objects, just expand here
-      };
-
-      let html = "<h2>Global Destroy Stats</h2><table><tr>";
-      for (let key in objectData) {
-        html += `<th>${objectData[key].label}</th>`;
-      }
-      html += "</tr><tr>";
-      for (let key in objectData) {
-        const stat = stats.find(s => s.objectType === key);
-        html += `<td>
-          <img src="${objectData[key].img}" alt="${key}">
-          <span>${stat ? stat.destroyedCount : 0}</span>
-        </td>`;
-      }
-      html += "</tr></table>";
-
-      document.getElementById("statsBox").innerHTML = html;
+    function logout() {
+      localStorage.removeItem("token");
+      token = null;
+      document.getElementById("auth").style.display = "block";
+      document.getElementById("userPanel").style.display = "none";
     }
 
-    loadStats();
+    function showUserPanel(email) {
+      document.getElementById("auth").style.display = "none";
+      document.getElementById("userPanel").style.display = "block";
+      document.getElementById("userEmail").innerText = email;
+    }
+
+    async function fetchBalances() {
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/game/balances`, {
+        headers: { "Authorization": token }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById("unminted").innerText = data.unmintedHash || 0;
+        document.getElementById("hash").innerText = data.hashBalance || 0;
+      }
+    }
+
+    async function fetchStats() {
+      const res = await fetch(`${API_BASE}/game/stats`);
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById("baseCount").innerText = data.find(d => d.objectType === "base")?.destroyedCount || 0;
+        document.getElementById("blueCount").innerText = data.find(d => d.objectType === "blue")?.destroyedCount || 0;
+        document.getElementById("redCount").innerText = data.find(d => d.objectType === "red")?.destroyedCount || 0;
+        document.getElementById("goldCount").innerText = data.find(d => d.objectType === "gold")?.destroyedCount || 0;
+        document.getElementById("rainbowCount").innerText = data.find(d => d.objectType === "rainbow")?.destroyedCount || 0;
+      }
+    }
+
+    // Countdown to daily mint
+    function startCountdown() {
+      function updateCountdown() {
+        const now = new Date();
+        const nextMint = new Date();
+        nextMint.setUTCHours(24, 0, 0, 0);
+        const diff = nextMint - now;
+        const h = Math.floor(diff / 1000 / 60 / 60);
+        const m = Math.floor((diff / 1000 / 60) % 60);
+        const s = Math.floor((diff / 1000) % 60);
+        document.getElementById("countdown").innerText = `Next Mint in ${h}h ${m}m ${s}s`;
+      }
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    }
+
+    startCountdown();
+    fetchStats();
+    setInterval(fetchStats, 10000); // refresh every 10s
+
+    if (token) {
+      showUserPanel("Returning User");
+      fetchBalances();
+    }
   </script>
 </body>
 </html>
