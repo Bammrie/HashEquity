@@ -10,110 +10,15 @@
 </head>
 <body>
   <h1>HashEquity Game</h1>
-  <div id="userPanel">
+
+  <div>
     <p>Unminted HASH: <span id="unminted">0</span> | HASH: <span id="hash">0</span></p>
     <button onclick="logout()">Log Out</button>
   </div>
-  <p>Score: <span id="score">0</span></p>
+
   <canvas id="gameCanvas" width="1000" height="600"></canvas>
 
-  <script>
-    const API_BASE = "https://api.hashequity.com/api";
-    let token = localStorage.getItem("token") || null;
-    if (!token) {
-      window.location.href = "index.html"; // redirect if not logged in
-    }
-
-    let score = 0;
-
-    const objectTypes = [
-      { name: "Base", img: "/images/HASH.png", value: 0.0000000100, chance: 80 },
-      { name: "Blue", img: "/images/HASHBlue.png", value: 0.0000000300, chance: 15 },
-      { name: "Red", img: "/images/HASHRed.png", value: 0.0000000500, chance: 4 },
-      { name: "Gold", img: "/images/HASHGold.png", value: 0.0000001000, chance: 0.9 },
-      { name: "Rainbow", img: "/images/HASHRainbow.png", value: 0.0000025000, chance: 0.1 }
-    ];
-
-    objectTypes.forEach(obj => {
-      const image = new Image();
-      image.src = obj.img;
-      obj.imageObj = image;
-    });
-
-    async function fetchBalances() {
-      const res = await fetch(`${API_BASE}/game/balances`, {
-        headers: { "Authorization": token }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById("unminted").innerText = data.unmintedHash || 0;
-        document.getElementById("hash").innerText = data.hashBalance || 0;
-      }
-    }
-    fetchBalances();
-
-    function logout() {
-      localStorage.removeItem("token");
-      window.location.href = "index.html";
-    }
-
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    let objects = [];
-
-    function chooseObjectType() {
-      const roll = Math.random() * 100;
-      let cumulative = 0;
-      for (const obj of objectTypes) {
-        cumulative += obj.chance;
-        if (roll <= cumulative) return obj;
-      }
-      return objectTypes[0];
-    }
-
-    function spawnObject() {
-      if (objects.length >= 20) return;
-      const type = chooseObjectType();
-      const x = Math.random() * (canvas.width - 50) + 25;
-      const y = Math.random() * (canvas.height - 50) + 25;
-      objects.push({ x, y, r: 20, type });
-    }
-
-    function drawObjects() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      objects.forEach(o => {
-        ctx.drawImage(o.type.imageObj, o.x - o.r, o.y - o.r, o.r * 2, o.r * 2);
-      });
-    }
-
-    canvas.addEventListener("click", async (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      for (let i = 0; i < objects.length; i++) {
-        const o = objects[i];
-        const dx = x - o.x;
-        const dy = y - o.y;
-        if (Math.sqrt(dx * dx + dy * dy) < o.r) {
-          objects.splice(i, 1);
-          score++;
-          document.getElementById("score").innerText = score;
-          await fetch(`${API_BASE}/game/destroy`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": token },
-            body: JSON.stringify({ objectType: o.type.name, hashValue: o.type.value })
-          });
-          fetchBalances();
-          spawnObject();
-          break;
-        }
-      }
-    });
-
-    setInterval(() => {
-      spawnObject();
-      drawObjects();
-    }, 500);
-  </script>
+  <script src="game.js"></script>
 </body>
 </html>
+
