@@ -9,6 +9,8 @@
     button { padding: 10px 20px; margin: 10px; font-size: 16px; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.4/dist/ethers.umd.min.js"></script>
+  <script src="objects.js"></script>
+  <script src="game.js" defer></script>
 </head>
 <body>
   <h1>HashEquity</h1>
@@ -20,7 +22,7 @@
 
   <!-- User Panel -->
   <div id="userPanel" style="display:none;">
-    <p>Wallet: <span id="walletAddress"></span></p>
+    <p>Logged in as <span id="walletAddress"></span></p>
     <p>Unminted HASH: <span id="unminted">0</span> | HASH: <span id="hash">0</span></p>
     <p id="countdown"></p>
     <button onclick="logout()">Log Out</button>
@@ -32,11 +34,9 @@
   <script>
     const API_BASE = "https://api.hashequity.com/api";
     let token = localStorage.getItem("token") || null;
-    let score = 0;
 
     async function connectWallet() {
       if (!window.ethereum) return alert("Please install MetaMask!");
-
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const walletAddress = await signer.getAddress();
@@ -75,7 +75,7 @@
     function showUserPanel(walletAddress) {
       document.getElementById("auth").style.display = "none";
       document.getElementById("userPanel").style.display = "block";
-      document.getElementById("walletAddress").innerText = walletAddress;
+      document.getElementById("walletAddress").innerText = walletAddress.slice(0,6) + "..." + walletAddress.slice(-4);
     }
 
     function logout() {
@@ -85,60 +85,10 @@
       document.getElementById("userPanel").style.display = "none";
     }
 
-    // Game (same as before, spawns circles)
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    let circles = [];
-
-    function spawnCircle() {
-      if (circles.length >= 20) return;
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
-      circles.push({ x, y, r: 15 });
-    }
-
-    function drawCircles() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "lime";
-      circles.forEach(c => {
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    }
-
-    canvas.addEventListener("click", async (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      for (let i = 0; i < circles.length; i++) {
-        const c = circles[i];
-        const dx = x - c.x;
-        const dy = y - c.y;
-        if (Math.sqrt(dx * dx + dy * dy) < c.r) {
-          circles.splice(i, 1);
-          score++;
-          document.getElementById("score").innerText = score;
-          if (token) {
-            await fetch(`${API_BASE}/game/destroy`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": token
-              },
-              body: JSON.stringify({ objectId: Date.now().toString() })
-            });
-            fetchBalances();
-          }
-          spawnCircle();
-          break;
-        }
-      }
-    });
-
-    setInterval(spawnCircle, 500);
-    setInterval(drawCircles, 50);
+    // Auto-login if token exists
+    if (token) fetchBalances();
   </script>
 </body>
 </html>
+
 
