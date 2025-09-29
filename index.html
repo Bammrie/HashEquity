@@ -31,59 +31,76 @@
   <canvas id="gameCanvas" width="800" height="400"></canvas>
 
   <script>
-    const API_BASE = "const API_BASE = "https://api.hashequity.com/api";
-";
+    const API_BASE = "https://api.hashequity.com/api";
     let token = localStorage.getItem("token") || null;
     let score = 0;
 
     async function signup() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const res = await fetch(`${API_BASE}/auth/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        token = data.token;
-        localStorage.setItem("token", token);
-        showUserPanel(data.email);
-        alert(data.message || "Signup successful ✅");
-      } else {
-        alert(data.error || "Signup failed ❌");
+      try {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const res = await fetch(`${API_BASE}/auth/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          token = data.token;
+          localStorage.setItem("token", token);
+          showUserPanel(data.email);
+          alert(data.message || "Signup successful");
+        } else {
+          alert(data.error || "Signup failed");
+          console.error("Signup error:", data);
+        }
+      } catch (err) {
+        console.error("Signup request failed:", err);
+        alert("Signup failed: " + err.message);
       }
     }
 
     async function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        token = data.token;
-        localStorage.setItem("token", token);
-        showUserPanel(data.email);
-        fetchBalances();
-        alert(data.message || "Login successful ✅");
-      } else {
-        alert(data.error || "Login failed ❌");
+      try {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          token = data.token;
+          localStorage.setItem("token", token);
+          showUserPanel(data.email);
+          fetchBalances();
+          alert(data.message || "Login successful");
+        } else {
+          alert(data.error || "Login failed");
+          console.error("Login error:", data);
+        }
+      } catch (err) {
+        console.error("Login request failed:", err);
+        alert("Login failed: " + err.message);
       }
     }
 
     async function fetchBalances() {
       if (!token) return;
-      const res = await fetch(`${API_BASE}/game/balances`, {
-        headers: { "Authorization": token }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById("unminted").innerText = data.unmintedHash || 0;
-        document.getElementById("hash").innerText = data.hashBalance || 0;
+      try {
+        const res = await fetch(`${API_BASE}/game/balances`, {
+          headers: { "Authorization": token }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("unminted").innerText = data.unmintedHash || 0;
+          document.getElementById("hash").innerText = data.hashBalance || 0;
+        } else {
+          console.error("Balance fetch error:", data);
+        }
+      } catch (err) {
+        console.error("Balance request failed:", err);
       }
     }
 
@@ -153,15 +170,19 @@
           score++;
           document.getElementById("score").innerText = score;
           if (token) {
-            await fetch(`${API_BASE}/game/destroy`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": token
-              },
-              body: JSON.stringify({ objectId: Date.now().toString() })
-            });
-            fetchBalances();
+            try {
+              await fetch(`${API_BASE}/game/destroy`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": token
+                },
+                body: JSON.stringify({ objectId: Date.now().toString() })
+              });
+              fetchBalances();
+            } catch (err) {
+              console.error("Destroy request failed:", err);
+            }
           }
           break;
         }
