@@ -2,54 +2,40 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>HashEquity</title>
+  <title>HashEquity - Login</title>
   <style>
-    body { background: black; color: white; text-align: center; font-family: Arial, sans-serif; }
-    canvas { background: #222; display: block; margin: 20px auto; }
+    body { 
+      background: black; 
+      color: gold; 
+      text-align: center; 
+      font-family: Arial, sans-serif; 
+    }
+    .container { margin-top: 100px; }
+    input, button { 
+      margin: 10px; 
+      padding: 10px; 
+      font-size: 16px; 
+      border-radius: 5px; 
+      border: none;
+    }
+    button { background: gold; color: black; cursor: pointer; }
+    button:hover { background: #d4af37; }
   </style>
 </head>
 <body>
-  <h1>HashEquity</h1>
+  <div class="container">
+    <h1>HashEquity</h1>
+    <h2>Login / Register</h2>
 
-  <!-- Auth Box -->
-  <div id="auth">
     <input type="text" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
+    <br>
     <button onclick="signup()">Sign Up</button>
     <button onclick="login()">Log In</button>
   </div>
 
-  <!-- User Panel -->
-  <div id="userPanel" style="display:none;">
-    <p>Welcome, <span id="userEmail"></span></p>
-    <p>Unminted HASH: <span id="unminted">0</span> | HASH: <span id="hash">0</span></p>
-    <p id="countdown"></p>
-    <button onclick="logout()">Log Out</button>
-  </div>
-
-  <p>Score: <span id="score">0</span></p>
-  <canvas id="gameCanvas" width="1000" height="600"></canvas>
-
   <script>
     const API_BASE = "https://api.hashequity.com/api";
-    let token = localStorage.getItem("token") || null;
-    let score = 0;
-
-    // Object definitions
-    const objectTypes = [
-      { name: "Base", img: "/images/HASH.png", value: 0.0000000100, chance: 80 },
-      { name: "Blue", img: "/images/HASHBlue.png", value: 0.0000000300, chance: 15 },
-      { name: "Red", img: "/images/HASHRed.png", value: 0.0000000500, chance: 4 },
-      { name: "Gold", img: "/images/HASHGold.png", value: 0.0000001000, chance: 0.9 },
-      { name: "Rainbow", img: "/images/HASHRainbow.png", value: 0.0000025000, chance: 0.1 }
-    ];
-
-    // Preload images
-    objectTypes.forEach(obj => {
-      const image = new Image();
-      image.src = obj.img;
-      obj.imageObj = image;
-    });
 
     async function signup() {
       const email = document.getElementById("email").value;
@@ -61,10 +47,8 @@
       });
       const data = await res.json();
       if (res.ok) {
-        token = data.token;
-        localStorage.setItem("token", token);
-        showUserPanel(data.email);
-        alert(data.message);
+        localStorage.setItem("token", data.token);
+        window.location.href = "game.html";
       } else {
         alert(data.error || "Signup failed");
       }
@@ -80,128 +64,11 @@
       });
       const data = await res.json();
       if (res.ok) {
-        token = data.token;
-        localStorage.setItem("token", token);
-        showUserPanel(data.email);
-        fetchBalances();
-        alert(data.message);
+        localStorage.setItem("token", data.token);
+        window.location.href = "game.html";
       } else {
         alert(data.error || "Login failed");
       }
-    }
-
-    async function fetchBalances() {
-      if (!token) return;
-      const res = await fetch(`${API_BASE}/game/balances`, {
-        headers: { "Authorization": token }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById("unminted").innerText = data.unmintedHash || 0;
-        document.getElementById("hash").innerText = data.hashBalance || 0;
-      }
-    }
-
-    function showUserPanel(email) {
-      document.getElementById("auth").style.display = "none";
-      document.getElementById("userPanel").style.display = "block";
-      document.getElementById("userEmail").innerText = email;
-      fetchBalances();
-    }
-
-    function logout() {
-      localStorage.removeItem("token");
-      token = null;
-      document.getElementById("auth").style.display = "block";
-      document.getElementById("userPanel").style.display = "none";
-    }
-
-    // Countdown to daily mint
-    function startCountdown() {
-      function updateCountdown() {
-        const now = new Date();
-        const nextMint = new Date();
-        nextMint.setUTCHours(24, 0, 0, 0);
-        const diff = nextMint - now;
-        const hours = Math.floor(diff / 1000 / 60 / 60);
-        const minutes = Math.floor((diff / 1000 / 60) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-        document.getElementById("countdown").innerText =
-          `Next Mint in ${hours}h ${minutes}m ${seconds}s`;
-      }
-      updateCountdown();
-      setInterval(updateCountdown, 1000);
-    }
-    startCountdown();
-
-    // Game logic
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    let objects = [];
-
-    function chooseObjectType() {
-      const roll = Math.random() * 100;
-      let cumulative = 0;
-      for (const obj of objectTypes) {
-        cumulative += obj.chance;
-        if (roll <= cumulative) return obj;
-      }
-      return objectTypes[0]; // fallback
-    }
-
-    function spawnObject() {
-      if (objects.length >= 20) return;
-      const type = chooseObjectType();
-      const x = Math.random() * (canvas.width - 50) + 25;
-      const y = Math.random() * (canvas.height - 50) + 25;
-      objects.push({ x, y, r: 20, type });
-    }
-
-    function drawObjects() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      objects.forEach(o => {
-        ctx.drawImage(o.type.imageObj, o.x - o.r, o.y - o.r, o.r * 2, o.r * 2);
-      });
-    }
-
-    canvas.addEventListener("click", async (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      for (let i = 0; i < objects.length; i++) {
-        const o = objects[i];
-        const dx = x - o.x;
-        const dy = y - o.y;
-        if (Math.sqrt(dx * dx + dy * dy) < o.r) {
-          objects.splice(i, 1);
-          score++;
-          document.getElementById("score").innerText = score;
-          if (token) {
-            await fetch(`${API_BASE}/game/destroy`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": token
-              },
-              body: JSON.stringify({ objectType: o.type.name, hashValue: o.type.value })
-            });
-            fetchBalances();
-          }
-          spawnObject(); // replace destroyed one
-          break;
-        }
-      }
-    });
-
-    setInterval(() => {
-      spawnObject();
-      drawObjects();
-    }, 500);
-
-    // Auto-login if token exists
-    if (token) {
-      showUserPanel("Returning User");
-      fetchBalances();
     }
   </script>
 </body>
