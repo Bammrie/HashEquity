@@ -11,7 +11,7 @@
 <body>
   <h1>HashEquity</h1>
 
-  <!-- Auth -->
+  <!-- Auth Box -->
   <div id="auth">
     <input type="text" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
@@ -27,8 +27,158 @@
     <button onclick="logout()">Log Out</button>
   </div>
 
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <p>Score: <span id="score">0</span></p>
 
-  <script src="game.js"></script>
+  <!-- Bigger canvas -->
+  <canvas id="gameCanvas" width="1000" height="600"></canvas>
+
+  <script>
+    // ✅ Use your custom backend subdomain (or Railway domain if not set up)
+    const API_BASE = "https://api.hashequity.com/api";
+    // const API_BASE = "https://hash-backend-production-a979.up.railway.app/api"; // fallback if subdomain not set
+    let token = localStorage.getItem("token") || null;
+    let score = 0;
+
+    async function signup() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const res = await fetch(`${API_BASE}/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        token = data.token;
+        localStorage.setItem("token", token);
+        showUserPanel(data.email);
+        alert(data.message);
+      } else {
+        alert(data.error || "Signup failed");
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        token = data.token;
+        localStorage.setItem("token", token);
+        showUserPanel(data.email);
+        fetchBalances();
+        alert(data.message);
+      } else {
+        alert(data.error || "Login failed");
+      }
+    }
+
+    async function fetchBalances() {
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/game/balances`, {
+        headers: { "Authorization": token }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById("unminted").innerText = data.unmintedHash || 0;
+        document.getElementById("hash").innerText = data.hashBalance || 0;
+      }
+    }
+
+    function showUserPanel(email) {
+      document.getElementById("auth").style.display = "none";
+      document.getElementById("userPanel").style.display = "block";
+      document.getElementById("userEmail").innerText = email;
+      fetchBalances();
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      token = null;
+      document.getElementById("auth").style.display = "block";
+      document.getElementById("userPanel").style.display = "none";
+    }
+
+    // Countdown
+    function startCountdown() {
+      function updateCountdown() {
+        const now = new Date();
+        const nextMint = new Date();
+        nextMint.setUTCHours(24, 0, 0, 0);
+        const diff = nextMint - now;
+        const hours = Math.floor(diff / 1000 / 60 / 60);
+        const minutes = Math.floor((diff / 1000 / 60) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        document.getElementById("countdown").innerText =
+          `Next Mint in ${hours}h ${minutes}m ${seconds}s`;
+      }
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    }
+    startCountdown();
+
+    // Game logic
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    let circles = [];
+
+    function spawnCircle() {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      circles.push({ x, y, r: 20 }); // ✅ bigger radius for visibility
+    }
+
+    function drawCircles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "lime";
+      circles.forEach(c => {
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    canvas.addEventListener("click", async (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      for (let i = 0; i < circles.length; i++) {
+        const c = circles[i];
+        const dx = x - c.x;
+        const dy = y - c.y;
+        if (Math.sqrt(dx * dx + dy * dy) < c.r) {
+          circles.splice(i, 1);
+          score++;
+          document.getElementById("score").innerText = score;
+          if (token) {
+            await fetch(`${API_BASE}/game/destroy`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": token
+              },
+              body: JSON.stringify({ objectId: Date.now().toString() })
+            });
+            fetchBalances();
+          }
+          break;
+        }
+      }
+    });
+
+    setInterval(spawnCircle, 1000);
+    setInterval(drawCircles, 50);
+
+    // Auto-login if token exists
+    if (token) {
+      showUserPanel("Returning User");
+      fetchBalances();
+    }
+  </script>
 </body>
 </html>
