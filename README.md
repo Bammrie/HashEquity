@@ -64,4 +64,57 @@ Regarding the API
 ```js
 const API_BASE = "https://api.hashequity.com/api";
 
+# HashEquity Backend - Dependency Map
+
+## File Structure
+- `server.js`
+  - Loads Express app
+  - Connects to MongoDB using `MONGO_URI`
+  - Mounts routes from `/routes`
+  - Uses middleware from `/middleware`
+
+- `/routes`
+  - `authRoutes.js` → Handles signup/login
+    - Depends on `models/User.js`
+    - Uses `bcrypt` for hashing and `jsonwebtoken` for tokens
+  - `gameRoutes.js` → Handles game actions
+    - Depends on `middleware/authMiddleware.js` (protects routes)
+    - Depends on `models/User.js`
+
+- `/middleware`
+  - `authMiddleware.js` → Verifies JWT tokens
+    - Required by `gameRoutes.js`
+
+- `/models`
+  - `User.js` → Defines schema for users
+    - Fields: `email`, `password`, `unmintedHash`, `hashBalance`
+
+## ENV Dependencies
+- `MONGO_URI` → Connection string to MongoDB
+- `JWT_SECRET` → Secret key for JWT signing
+
+## Frontend Dependencies (hash-frontend)
+- `index.html`
+  - Uses `API_BASE` = `https://api.hashequity.com/api`
+  - Calls:
+    - `/auth/signup` → Signup user
+    - `/auth/login` → Login user
+    - `/game/balances` → Fetch balances
+    - `/game/destroy` → Destroy coin, update balances
+  - Expects JWT in localStorage under `token`
+
+## Critical Couplings
+- If `authMiddleware.js` is missing or broken → all `/game` routes will fail.
+- If `API_BASE` is not correct → frontend won’t talk to backend.
+- If MongoDB variables are missing in Railway → backend will fail on startup.
+- If JWT_SECRET differs between backend and frontend Railway → logins won’t work.
+
+## Minting Logic (Future)
+- Users earn "Unminted HASH" from game clicks.
+- Daily cron job (00:00 UTC) should convert Unminted HASH → HASH.
+- Countdown timer on frontend is purely cosmetic for now.
+
+---
+
+
 
