@@ -3,22 +3,169 @@
 <head>
   <meta charset="UTF-8">
   <title>HashEquity - Game</title>
-  <style>
-    body { background: black; color: white; text-align: center; font-family: Arial, sans-serif; }
-    canvas { background: #222; display: block; margin: 20px auto; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>HashEquity Game</h1>
+  <div class="overlay">
+    <h1 class="title">HashEquity Game</h1>
 
-  <div>
-    <p>Unminted HASH: <span id="unminted">0</span> | HASH: <span id="hash">0</span></p>
-    <button onclick="logout()">Log Out</button>
+    <!-- User Panel -->
+    <div id="userPanel">
+      <p>Welcome, <span id="userEmail"></span></p>
+      <p>Unminted HASH: <span id="unminted">0</span> | HASH: <span id="hash">0</span></p>
+      <p id="countdown"></p>
+      <button onclick="logout()">Log Out</button>
+    </div>
+
+    <!-- Game -->
+    <p>Score: <span id="score">0</span></p>
+    <canvas id="gameCanvas" width="1000" height="600"></canvas>
   </div>
 
-  <canvas id="gameCanvas" width="1000" height="600"></canvas>
+  <script>
+    const API_BASE = "https://api.hashequity.com/api";
+    let token = localStorage.getItem("token");
+    let score = 0;
 
-  <script src="game.js"></script>
+    if (!token) {
+      // If no token, boot user back to login
+      window.location.href = "index.html";
+    }
+
+    // Fetch balances
+    async function fetchBalances() {
+      const res = await fetch(`${API_BASE}/game/balances`, {
+        headers: { "Authorization": token }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById("unminted").innerText = data.unmintedHash || 0;
+        document.getElementById("hash").innerText = data.hashBalance || 0;
+      }
+    }
+
+    // Logout
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "index.html";
+    }
+
+    // Countdown to daily mint
+    function startCountdown() {
+      function updateCountdown() {
+        const now = new Date();
+        const nextMint = new Date();
+        nextMint.setUTCHours(24, 0, 0, 0);
+        const diff = nextMint - now;
+        const hours = Math.floor(diff / 1000 / 60 / 60);
+        const minutes = Math.floor((diff / 1000 / 60) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        document.getElementById("countdown").innerText =
+          `Next Mint in ${hours}h ${minutes}m ${seconds}s`;
+      }
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    }
+    startCountdown();
+
+    // === Game Logic ===
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    let objects = [];
+
+    // Load images
+    const images = {
+      base: "images/HASH.png",
+      blue: "images/HASHBlue.png",
+      red: "images/HASHRed.png",
+      gold: "images/HASHGold.png",
+      rainbow: "images/HASHRainbow.png"
+    };
+
+    const rewards = {
+      base: 0.0000000100,
+      blue: 0.0000000300,
+      red: 0.0000000500,
+      gold: 0.0000001000,
+      rainbow: 0.0000025000
+    };
+
+    const spawnChances = [
+      { type: "base", chance: 0.8 },
+      { type: "blue", chance: 0.15 },
+      { type: "red", chance: 0.04 },
+      { type: "gold", chance: 0.009 },
+      { type: "rainbow", chance: 0.001 }
+    ];
+
+    function pickObjectType() {
+      let rand = Math.random();
+      let sum = 0;
+      for (let obj of spawnChances) {
+        sum += obj.chance;
+        if (rand < sum) return obj.type;
+      }
+      return "base";
+    }
+
+    function spawnObject() {
+      if (objects.length >= 20) return;
+      const x = Math.random() * (canvas.width - 50);
+      const y = Math.random() * (canvas.height - 50);
+      const type = pickObjectType();
+      const img = new Image();
+      img.src = images[type];
+      objects.push({ x, y, r: 25, type, img });
+    }
+
+    function drawObjects() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      objects.forEach(o => {
+        ctx.drawImage(o.img, o.x - o.r, o.y - o.r, o.r * 2, o.r * 2);
+      });
+    }
+
+    canvas.addEventListener("click", async (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      for (let i = 0; i < objects.length; i++) {
+        const o = objects[i];
+        const dx = x - o.x;
+        const dy = y - o.y;
+        if (Math.sqrt(dx * dx + dy * dy) < o.r) {
+          objects.splice(i, 1);
+          score++;
+          document.getElementById("score").innerText = score;
+
+          if (token) {
+            await fetch(`${API_BASE}/game/destroy`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": token
+              },
+              body: JSON.stringify({
+                objectId: Date.now().toString(),
+                type: o.type,
+                reward: rewards[o.type]
+              })
+            });
+            fetchBalances();
+          }
+          spawnObject(); // replace it
+          break;
+        }
+      }
+    });
+
+    // Game loop
+    setInterval(() => {
+      if (objects.length < 20) spawnObject();
+      drawObjects();
+    }, 100);
+  </script>
 </body>
 </html>
 
