@@ -11,7 +11,7 @@
 <body>
   <h1>HashEquity</h1>
 
-  <!-- Auth Box -->
+  <!-- Auth -->
   <div id="auth">
     <input type="text" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
@@ -27,110 +27,8 @@
     <button onclick="logout()">Log Out</button>
   </div>
 
-  <p>Score: <span id="score">0</span></p>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
 
-  <script>
-    const API_BASE = "https://api.hashequity.com/api";
-    let token = localStorage.getItem("token") || null;
-    let score = 0;
-
-    // Coin definitions
-    const coinTypes = [
-      { name: "base", value: 0.0000000100, chance: 80, img: "HASH.png" },
-      { name: "blue", value: 0.0000000300, chance: 15, img: "HASHBlue.png" },
-      { name: "red", value: 0.0000000500, chance: 4, img: "HASHRed.png" },
-      { name: "gold", value: 0.0000001000, chance: 0.9, img: "HASHGold.png" },
-      { name: "rainbow", value: 0.0000025000, chance: 0.1, img: "HASHRainbow.png" }
-    ];
-
-    // Preload images
-    const images = {};
-    coinTypes.forEach(c => {
-      const img = new Image();
-      img.src = c.img;
-      images[c.name] = img;
-    });
-
-    // Weighted random coin selection
-    function pickCoinType() {
-      const rand = Math.random() * 100;
-      let sum = 0;
-      for (let coin of coinTypes) {
-        sum += coin.chance;
-        if (rand <= sum) return coin;
-      }
-      return coinTypes[0]; // fallback
-    }
-
-    // Game canvas
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    let circles = [];
-
-    function spawnCoin() {
-      if (circles.length >= 20) return; // cap at 20
-      const coin = pickCoinType();
-      const x = Math.random() * (canvas.width - 40) + 20;
-      const y = Math.random() * (canvas.height - 40) + 20;
-      circles.push({ x, y, r: 20, type: coin });
-    }
-
-    function drawCoins() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      circles.forEach(c => {
-        ctx.drawImage(images[c.type.name], c.x - 20, c.y - 20, 40, 40);
-      });
-    }
-
-    canvas.addEventListener("click", async (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      for (let i = 0; i < circles.length; i++) {
-        const c = circles[i];
-        const dx = x - c.x;
-        const dy = y - c.y;
-        if (Math.sqrt(dx * dx + dy * dy) < c.r) {
-          const destroyed = circles.splice(i, 1)[0];
-          score++;
-          document.getElementById("score").innerText = score;
-
-          if (token) {
-            await fetch(`${API_BASE}/game/destroy`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "Authorization": token },
-              body: JSON.stringify({
-                objectType: destroyed.type.name,
-                value: destroyed.type.value
-              })
-            });
-            fetchBalances();
-          }
-
-          spawnCoin(); // replace destroyed coin
-          break;
-        }
-      }
-    });
-
-    // Initial spawn
-    for (let i = 0; i < 20; i++) spawnCoin();
-
-    setInterval(drawCoins, 50);
-
-    // --- Auth / balances ---
-    async function signup() { /* (same as before) */ }
-    async function login() { /* (same as before) */ }
-    async function fetchBalances() { /* (same as before) */ }
-    function showUserPanel(email) { /* (same as before) */ }
-    function logout() { /* (same as before) */ }
-
-    // Countdown
-    function startCountdown() { /* (same as before) */ }
-    startCountdown();
-  </script>
+  <script src="game.js"></script>
 </body>
 </html>
-
