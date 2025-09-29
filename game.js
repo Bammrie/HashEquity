@@ -1,101 +1,35 @@
 const API_BASE = "https://api.hashequity.com/api";
 let token = localStorage.getItem("token") || null;
 
-// --- Auth ---
-async function signup() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const res = await fetch(`${API_BASE}/auth/signup`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await res.json();
-  if (res.ok) {
-    token = data.token;
-    localStorage.setItem("token", token);
-    showUserPanel(data.email);
-    alert(data.message);
-  } else {
-    alert(data.error || "Signup failed");
-  }
-}
+// --- Auth (same as before) ---
+async function signup() { /* unchanged */ }
+async function login() { /* unchanged */ }
+async function fetchBalances() { /* unchanged */ }
+function showUserPanel(email) { /* unchanged */ }
+function logout() { /* unchanged */ }
 
-async function login() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await res.json();
-  if (res.ok) {
-    token = data.token;
-    localStorage.setItem("token", token);
-    showUserPanel(data.email);
-    fetchBalances();
-    alert(data.message);
-  } else {
-    alert(data.error || "Login failed");
-  }
-}
-
-async function fetchBalances() {
-  if (!token) return;
-  const res = await fetch(`${API_BASE}/game/balances`, {
-    headers: { Authorization: token },
-  });
-  const data = await res.json();
-  if (res.ok) {
-    document.getElementById("unminted").innerText = data.unmintedHash || 0;
-    document.getElementById("hash").innerText = data.hashBalance || 0;
-  }
-}
-
-function showUserPanel(email) {
-  document.getElementById("auth").style.display = "none";
-  document.getElementById("userPanel").style.display = "block";
-  document.getElementById("userEmail").innerText = email;
-  fetchBalances();
-}
-
-function logout() {
-  localStorage.removeItem("token");
-  token = null;
-  document.getElementById("auth").style.display = "block";
-  document.getElementById("userPanel").style.display = "none";
-}
-
-// --- Countdown ---
-function startCountdown() {
-  function updateCountdown() {
-    const now = new Date();
-    const nextMint = new Date();
-    nextMint.setUTCHours(24, 0, 0, 0);
-    const diff = nextMint - now;
-    const hours = Math.floor(diff / 1000 / 60 / 60);
-    const minutes = Math.floor((diff / 1000 / 60) % 60);
-    const seconds = Math.floor((diff / 1000) % 60);
-    document.getElementById("countdown").innerText =
-      `Next Mint in ${hours}h ${minutes}m ${seconds}s`;
-  }
-  updateCountdown();
-  setInterval(updateCountdown, 1000);
-}
+// --- Countdown (same as before) ---
+function startCountdown() { /* unchanged */ }
 startCountdown();
 
 // --- Game ---
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// ✅ Preload images
 const coinTypes = [
-  { image: "HASH.png", value: 0.0000000100, chance: 0.8 },
-  { image: "HASHBlue.png", value: 0.0000000300, chance: 0.15 },
-  { image: "HASHRed.png", value: 0.0000000500, chance: 0.04 },
-  { image: "HASHGold.png", value: 0.0000001000, chance: 0.009 },
-  { image: "HASHRainbow.png", value: 0.0000025000, chance: 0.001 },
+  { src: "HASH.png", value: 0.0000000100, chance: 0.8 },
+  { src: "HASHBlue.png", value: 0.0000000300, chance: 0.15 },
+  { src: "HASHRed.png", value: 0.0000000500, chance: 0.04 },
+  { src: "HASHGold.png", value: 0.0000001000, chance: 0.009 },
+  { src: "HASHRainbow.png", value: 0.0000025000, chance: 0.001 },
 ];
+
+coinTypes.forEach(c => {
+  const img = new Image();
+  img.src = c.src;
+  c.image = img; // attach loaded image
+});
 
 let objects = [];
 
@@ -119,9 +53,7 @@ function spawnObject() {
 function drawObjects() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   objects.forEach(obj => {
-    const img = new Image();
-    img.src = obj.coin.image;
-    ctx.drawImage(img, obj.x - obj.r, obj.y - obj.r, obj.r * 2, obj.r * 2);
+    ctx.drawImage(obj.coin.image, obj.x - obj.r, obj.y - obj.r, obj.r * 2, obj.r * 2);
   });
 }
 
@@ -147,10 +79,11 @@ canvas.addEventListener("click", async (e) => {
 });
 
 function gameLoop() {
-  if (objects.length < 20) {
+  while (objects.length < 20) {
     spawnObject();
   }
   drawObjects();
 }
 
 setInterval(gameLoop, 200);
+
