@@ -1,6 +1,11 @@
-const API_BASE = "https://api.hashequity.com/api";
-let walletAddress = localStorage.getItem("wallet");
-document.getElementById("walletAddress").innerText = walletAddress;
+const API_BASE = "https://hash-backend-production.up.railway.app/api";
+const walletAddress = localStorage.getItem("wallet");
+
+if (!walletAddress) {
+  window.location.href = "/";
+} else {
+  document.getElementById("walletAddress").innerText = walletAddress;
+}
 
 // Countdown
 function startCountdown() {
@@ -25,21 +30,27 @@ const ctx = canvas.getContext("2d");
 let objectsOnScreen = [];
 
 function pickObject() {
-  const r = Math.random() * 100;
+  const totalChance = OBJECTS.reduce((sum, obj) => sum + obj.chance, 0);
+  const r = Math.random() * totalChance;
   let sum = 0;
-  for (let obj of OBJECTS) {
-    sum += obj.rarity;
-    if (r <= sum) return { ...obj };
+  for (const obj of OBJECTS) {
+    sum += obj.chance;
+    if (r <= sum) {
+      return { ...obj };
+    }
   }
-  return OBJECTS[0];
+  return { ...OBJECTS[0] };
 }
 
 function spawnObject() {
   if (objectsOnScreen.length >= 20) return;
   const obj = pickObject();
-  obj.x = Math.random() * (canvas.width - 50);
-  obj.y = Math.random() * (canvas.height - 50);
-  obj.size = 40;
+  const size = 40;
+  const maxX = canvas.width - size;
+  const maxY = canvas.height - size;
+  obj.x = Math.random() * maxX;
+  obj.y = Math.random() * maxY;
+  obj.size = size;
   const img = new Image();
   img.src = obj.image;
   obj.img = img;
@@ -62,29 +73,40 @@ canvas.addEventListener("click", async e => {
     if (x >= o.x && x <= o.x + o.size && y >= o.y && y <= o.y + o.size) {
       objectsOnScreen.splice(i, 1);
       spawnObject();
-      await fetch(`${API_BASE}/game/destroy`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet: walletAddress, objectId: o.id })
-      });
-      fetchBalances();
+      if (walletAddress) {
+        try {
+          await fetch(`${API_BASE}/game/destroy`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ wallet: walletAddress, objectId: o.id })
+          });
+          fetchBalances();
+        } catch (err) {
+          console.error("Failed to report destroy", err);
+        }
+      }
       break;
     }
   }
 });
 
 async function fetchBalances() {
-  const res = await fetch(`${API_BASE}/game/balances?wallet=${walletAddress}`);
-  const data = await res.json();
-  document.getElementById("unminted").innerText = data.unmintedHash || 0;
-  document.getElementById("hash").innerText = data.hashBalance || 0;
+  if (!walletAddress) return;
+  try {
+    const res = await fetch(`${API_BASE}/game/balances?wallet=${walletAddress}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    document.getElementById("unminted").innerText = data.unmintedHash ?? 0;
+    document.getElementById("hash").innerText = data.hashBalance ?? 0;
+  } catch (err) {
+    console.error("Failed to load balances", err);
+  }
 }
 
+for (let i = 0; i < 5; i++) {
+  spawnObject();
+}
 setInterval(spawnObject, 1000);
 setInterval(drawObjects, 50);
+drawObjects();
 fetchBalances();
-
-
-// Loops
-setInterval(spawnCircle, 1000);
-setInterval(drawCircles, 50);

@@ -31,7 +31,7 @@
   </div>
 
   <script>
-    const API_BASE = "https://api.hashequity.com/api";
+    const API_BASE = "https://hash-backend-production.up.railway.app/api";
     let walletAddress = null;
 
     async function connectWallet() {
@@ -52,15 +52,21 @@
     }
 
     async function loadStats() {
-      const res = await fetch(`${API_BASE}/game/stats`);
-      const stats = await res.json();
       const tbody = document.querySelector("#statsTable tbody");
-      tbody.innerHTML = "";
-      stats.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td><img src="images/${row.image}" width="40"> ${row.name}</td><td>${row.destroyed}</td>`;
-        tbody.appendChild(tr);
-      });
+      try {
+        const res = await fetch(`${API_BASE}/game/stats`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const stats = await res.json();
+        tbody.innerHTML = "";
+        stats.forEach(row => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td><img src="images/${row.image}" width="40" alt="${row.name}"> ${row.name}</td><td>${row.destroyed}</td>`;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error("Failed to load stats", err);
+        tbody.innerHTML = '<tr><td colspan="2">Stats are currently unavailable. Please try again later.</td></tr>';
+      }
     }
 
     document.getElementById("connectWallet").addEventListener("click", connectWallet);
