@@ -1,0 +1,220 @@
+.panel {
+  background: linear-gradient(180deg, rgba(20, 26, 48, 0.92), rgba(9, 12, 24, 0.92));
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  border: 1px solid rgba(123, 92, 255, 0.35);
+  box-shadow: 0 18px 40px rgba(5, 8, 20, 0.4);
+}
+
+.panel header h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+}
+
+.panel header p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(245, 248, 255, 0.7);
+  line-height: 1.5;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.85rem;
+  margin: 0;
+}
+
+.metrics div {
+  padding: 0.85rem 1rem;
+  background: rgba(6, 10, 24, 0.6);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(6px);
+}
+
+.metrics dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: rgba(245, 248, 255, 0.6);
+  margin-bottom: 0.25rem;
+}
+
+.metrics dd {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.mintWindow {
+  background: rgba(123, 92, 255, 0.12);
+  border: 1px solid rgba(123, 92, 255, 0.4);
+  border-radius: 1.1rem;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mintWindow h3 {
+  margin: 0;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.mintWindow p {
+  margin: 0;
+}
+
+.mintHint {
+  font-size: 0.75rem;
+  color: rgba(245, 248, 255, 0.65);
+}
+
+.mintOpen {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.mintWindow button {
+  align-self: flex-start;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.65rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mintWindow button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.mintWindow button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(123, 92, 255, 0.35);
+}
+
+.tradeForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tradeForm label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(245, 248, 255, 0.65);
+}
+
+.tradeInputs {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+}
+
+.tradeInputs input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  color: inherit;
+  font-size: 0.95rem;
+}
+
+.tradeInputs button {
+  background: rgba(123, 92, 255, 0.25);
+  color: var(--accent);
+  border: 1px solid rgba(123, 92, 255, 0.5);
+  border-radius: 999px;
+  padding: 0.65rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.adminGate {
+  background: rgba(8, 12, 26, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.1rem;
+  padding: 1.25rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.adminGate h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.loginForm {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.loginForm label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(245, 248, 255, 0.65);
+}
+
+.loginForm input {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  color: inherit;
+}
+
+.secondaryButton {
+  justify-self: start;
+  background: rgba(123, 92, 255, 0.22);
+  color: #fff;
+  border: 1px solid rgba(123, 92, 255, 0.55);
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.adminStatus {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.adminStatus p {
+  margin: 0;
+  color: rgba(245, 248, 255, 0.75);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 520px) {
+  .tradeInputs {
+    grid-template-columns: 1fr;
+  }
+
+  .tradeInputs button,
+  .mintWindow button,
+  .secondaryButton {
+    width: 100%;
+    text-align: center;
+  }
+}

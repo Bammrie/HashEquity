@@ -85,6 +85,7 @@ VITE_RPC_URL=<polygon-rpc>
 VITE_HASH_TOKEN_ADDRESS=0x...
 VITE_NFT_CONTRACT_ADDRESS=0x...
 VITE_BACKEND_URL=https://api.hashequity.com
+VITE_ADMIN_PASSCODE=<frontend gate for vault admin>
 
 
 Secrets live in Railway/hosted secret managers. Never commit them.
@@ -98,12 +99,15 @@ Wallet-linked account; two balances: hash_balance and unminted_hash_balance.
 Object
 
 Spawned items on the game field; each has type, spawn_chance, and reward definition.
+Ten active objects must be rendered as animated sprites using the /images/ObjectX-Y.png assets.
+Object IDs are derived from the filename digits (Object0-1 → "Object 1", Object2-8 → "Object 28").
+The arena presentation must feel dynamic: sprites float within a styled battleground instead of static cards.
 
 Some objects pay unminted directly; others trigger mini-games (slot/plinko/wheel).
 
 HashVault
 
-Single hot wallet. Receives 20% of daily mint. Pays 50% trade-in conversions. Holds both real and unminted balances in DB.
+Single hot wallet controlled exclusively by the site admin. Receives 20% of daily mint. Pays 50% trade-in conversions. Holds both real and unminted balances in DB. Frontend must gate vault controls and the daily mint behind an admin-only login using the configured passcode.
 
 NFT
 

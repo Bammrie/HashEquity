@@ -1,0 +1,22 @@
+.board {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(123, 92, 255, 0.35);
+  background-image: linear-gradient(135deg, rgba(22, 30, 58, 0.92), rgba(13, 15, 33, 0.92)),
+    url('../../images/background.png');
+  background-size: cover;
+  background-position: center;
+  min-height: 540px;
+  box-shadow: 0 25px 60px rgba(11, 16, 37, 0.55);
+}
+
+.glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(123, 92, 255, 0.28), transparent 55%),
+    radial-gradient(circle at 75% 70%, rgba(45, 212, 191, 0.22), transparent 60%);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  z-index: 0;
+}

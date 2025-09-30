@@ -1,76 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>HashEquity</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <h1>HashEquity</h1>
-
-  <!-- Wallet Connect -->
-  <div id="auth">
-    <button id="connectWallet">Connect Wallet</button>
-  </div>
-
-  <!-- User Panel -->
-  <div id="userPanel" style="display:none;">
-    <p>Welcome, <span id="walletAddress"></span></p>
-    <button onclick="goToGame()">Enter Game</button>
-  </div>
-
-  <!-- Stats Table -->
-  <div id="stats">
-    <h2>Global Object Destroy Stats</h2>
-    <table id="statsTable" border="1">
-      <thead>
-        <tr><th>Object</th><th>Destroyed</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <script>
-    const API_BASE = "https://hash-backend-production.up.railway.app/api";
-    let walletAddress = null;
-
-    async function connectWallet() {
-      if (window.ethereum) {
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        walletAddress = accounts[0];
-        document.getElementById("auth").style.display = "none";
-        document.getElementById("userPanel").style.display = "block";
-        document.getElementById("walletAddress").innerText = walletAddress;
-        localStorage.setItem("wallet", walletAddress);
-      } else {
-        alert("MetaMask not found. Please install it.");
-      }
-    }
-
-    function goToGame() {
-      window.location.href = "/game.html";
-    }
-
-    async function loadStats() {
-      const tbody = document.querySelector("#statsTable tbody");
-      try {
-        const res = await fetch(`${API_BASE}/game/stats`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const stats = await res.json();
-        tbody.innerHTML = "";
-        stats.forEach(row => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td><img src="images/${row.image}" width="40" alt="${row.name}"> ${row.name}</td><td>${row.destroyed}</td>`;
-          tbody.appendChild(tr);
-        });
-      } catch (err) {
-        console.error("Failed to load stats", err);
-        tbody.innerHTML = '<tr><td colspan="2">Stats are currently unavailable. Please try again later.</td></tr>';
-      }
-    }
-
-    document.getElementById("connectWallet").addEventListener("click", connectWallet);
-    loadStats();
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HashEquity</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
