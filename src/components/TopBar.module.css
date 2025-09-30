@@ -1,0 +1,17 @@
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0 2rem;
+}
+
+.topBar h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.topBar p {
+  margin: 0.35rem 0 0;
+  color: rgba(245, 248, 255, 0.65);
+}
