@@ -1,82 +1,89 @@
+const API_BASE = "https://api.hashequity.com/api";
+let walletAddress = localStorage.getItem("wallet");
+document.getElementById("walletAddress").innerText = walletAddress;
+
+// Countdown
+function startCountdown() {
+  function update() {
+    const now = new Date();
+    const nextMint = new Date();
+    nextMint.setUTCHours(24, 0, 0, 0);
+    const diff = nextMint - now;
+    const h = Math.floor(diff / 1000 / 60 / 60);
+    const m = Math.floor((diff / 1000 / 60) % 60);
+    const s = Math.floor((diff / 1000) % 60);
+    document.getElementById("countdown").innerText = `Next Mint in ${h}h ${m}m ${s}s`;
+  }
+  update();
+  setInterval(update, 1000);
+}
+startCountdown();
+
+// Game setup
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+let objectsOnScreen = [];
 
-let circles = [];
-let score = 0;
-
-// 🎲 Utility: pick random object by chance
-function getRandomObject() {
-  const roll = Math.random() * 100;
-  let cumulative = 0;
-  for (const obj of gameObjects) {
-    cumulative += obj.chance;
-    if (roll <= cumulative) return obj;
+function pickObject() {
+  const r = Math.random() * 100;
+  let sum = 0;
+  for (let obj of OBJECTS) {
+    sum += obj.rarity;
+    if (r <= sum) return { ...obj };
   }
-  return gameObjects[0]; // fallback
+  return OBJECTS[0];
 }
 
-// ✅ Spawn capped at 20
-function spawnCircle() {
-  if (circles.length >= 20) return;
-  const obj = getRandomObject();
-  const x = Math.random() * canvas.width;
-  const y = Math.random() * canvas.height;
-  circles.push({ ...obj, x, y, r: 20 });
-  logSpawn(obj.id);
+function spawnObject() {
+  if (objectsOnScreen.length >= 20) return;
+  const obj = pickObject();
+  obj.x = Math.random() * (canvas.width - 50);
+  obj.y = Math.random() * (canvas.height - 50);
+  obj.size = 40;
+  const img = new Image();
+  img.src = obj.image;
+  obj.img = img;
+  objectsOnScreen.push(obj);
 }
 
-// Draw objects
-function drawCircles() {
+function drawObjects() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  circles.forEach(c => {
-    const img = new Image();
-    img.src = c.image;
-    ctx.drawImage(img, c.x - c.r, c.y - c.r, c.r * 2, c.r * 2);
+  objectsOnScreen.forEach(o => {
+    ctx.drawImage(o.img, o.x, o.y, o.size, o.size);
   });
 }
 
-// Handle clicks
-canvas.addEventListener("click", async (e) => {
+canvas.addEventListener("click", async e => {
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
-
-  for (let i = 0; i < circles.length; i++) {
-    const c = circles[i];
-    const dx = x - c.x;
-    const dy = y - c.y;
-    if (Math.sqrt(dx * dx + dy * dy) < c.r) {
-      circles.splice(i, 1);
-      score++;
-      document.getElementById("score").innerText = score;
-      if (token) {
-        await logDestroy(c.id, c.reward);
-        fetchBalances();
-      }
-      spawnCircle();
+  for (let i = 0; i < objectsOnScreen.length; i++) {
+    const o = objectsOnScreen[i];
+    if (x >= o.x && x <= o.x + o.size && y >= o.y && y <= o.y + o.size) {
+      objectsOnScreen.splice(i, 1);
+      spawnObject();
+      await fetch(`${API_BASE}/game/destroy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet: walletAddress, objectId: o.id })
+      });
+      fetchBalances();
       break;
     }
   }
 });
 
-// API calls
-async function logSpawn(objectId) {
-  if (!token) return;
-  await fetch(`${API_BASE}/game/spawn`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": token },
-    body: JSON.stringify({ objectId })
-  });
+async function fetchBalances() {
+  const res = await fetch(`${API_BASE}/game/balances?wallet=${walletAddress}`);
+  const data = await res.json();
+  document.getElementById("unminted").innerText = data.unmintedHash || 0;
+  document.getElementById("hash").innerText = data.hashBalance || 0;
 }
 
-async function logDestroy(objectId, reward) {
-  if (!token) return;
-  await fetch(`${API_BASE}/game/destroy`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": token },
-    body: JSON.stringify({ objectId, reward })
-  });
-}
+setInterval(spawnObject, 1000);
+setInterval(drawObjects, 50);
+fetchBalances();
+
 
 // Loops
 setInterval(spawnCircle, 1000);
