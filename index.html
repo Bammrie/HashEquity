@@ -3,92 +3,68 @@
 <head>
   <meta charset="UTF-8">
   <title>HashEquity</title>
-  <style>
-    body { background: black; color: white; text-align: center; font-family: Arial, sans-serif; }
-    canvas { background: #222; display: block; margin: 20px auto; }
-    button { padding: 10px 20px; margin: 10px; font-size: 16px; }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.4/dist/ethers.umd.min.js"></script>
-  <script src="objects.js"></script>
-  <script src="game.js" defer></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>HashEquity</h1>
 
-  <!-- Wallet Login -->
+  <!-- Wallet Connect -->
   <div id="auth">
-    <button onclick="connectWallet()">🔗 Connect Wallet</button>
+    <button id="connectWallet">Connect Wallet</button>
   </div>
 
   <!-- User Panel -->
   <div id="userPanel" style="display:none;">
-    <p>Logged in as <span id="walletAddress"></span></p>
-    <p>Unminted HASH: <span id="unminted">0</span> | HASH: <span id="hash">0</span></p>
-    <p id="countdown"></p>
-    <button onclick="logout()">Log Out</button>
+    <p>Welcome, <span id="walletAddress"></span></p>
+    <button onclick="goToGame()">Enter Game</button>
   </div>
 
-  <p>Score: <span id="score">0</span></p>
-  <canvas id="gameCanvas" width="1000" height="600"></canvas>
+  <!-- Stats Table -->
+  <div id="stats">
+    <h2>Global Object Destroy Stats</h2>
+    <table id="statsTable" border="1">
+      <thead>
+        <tr><th>Object</th><th>Destroyed</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <script>
     const API_BASE = "https://api.hashequity.com/api";
-    let token = localStorage.getItem("token") || null;
+    let walletAddress = null;
 
     async function connectWallet() {
-      if (!window.ethereum) return alert("Please install MetaMask!");
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const walletAddress = await signer.getAddress();
-      const message = "Login to HashEquity";
-      const signature = await signer.signMessage(message);
-
-      const res = await fetch(`${API_BASE}/auth/wallet-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ walletAddress, signature })
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        token = data.token;
-        localStorage.setItem("token", token);
-        showUserPanel(walletAddress);
-        fetchBalances();
+      if (window.ethereum) {
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        walletAddress = accounts[0];
+        document.getElementById("auth").style.display = "none";
+        document.getElementById("userPanel").style.display = "block";
+        document.getElementById("walletAddress").innerText = walletAddress;
+        localStorage.setItem("wallet", walletAddress);
       } else {
-        alert(data.error || "Wallet login failed");
+        alert("MetaMask not found. Please install it.");
       }
     }
 
-    async function fetchBalances() {
-      if (!token) return;
-      const res = await fetch(`${API_BASE}/game/balances`, {
-        headers: { "Authorization": token }
+    function goToGame() {
+      window.location.href = "/game.html";
+    }
+
+    async function loadStats() {
+      const res = await fetch(`${API_BASE}/game/stats`);
+      const stats = await res.json();
+      const tbody = document.querySelector("#statsTable tbody");
+      tbody.innerHTML = "";
+      stats.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td><img src="images/${row.image}" width="40"> ${row.name}</td><td>${row.destroyed}</td>`;
+        tbody.appendChild(tr);
       });
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById("unminted").innerText = data.unmintedHash || 0;
-        document.getElementById("hash").innerText = data.hashBalance || 0;
-      }
     }
 
-    function showUserPanel(walletAddress) {
-      document.getElementById("auth").style.display = "none";
-      document.getElementById("userPanel").style.display = "block";
-      document.getElementById("walletAddress").innerText = walletAddress.slice(0,6) + "..." + walletAddress.slice(-4);
-    }
-
-    function logout() {
-      localStorage.removeItem("token");
-      token = null;
-      document.getElementById("auth").style.display = "block";
-      document.getElementById("userPanel").style.display = "none";
-    }
-
-    // Auto-login if token exists
-    if (token) fetchBalances();
+    document.getElementById("connectWallet").addEventListener("click", connectWallet);
+    loadStats();
   </script>
 </body>
 </html>
-
-
