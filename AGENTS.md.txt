@@ -3,45 +3,27 @@ Canonical spec for HashEquity.com. This file defines scope, data models, service
 0) Project Summary
 
 HashEquity is a click-based crypto game and NFT ecosystem on Polygon (MATIC). Players earn HASH exclusively through gameplay. No presale, no admin allotments. All tokens are minted via play and daily settlement.
-
 Core pillars:
-
-Simple loop, deep meta: 10 clickable objects; destroy → reward → respawn.
-
+Simple loop, deep meta: 10 clickable objects that float around a game area on screen; destroy → reward → respawn.
 Economy controls: 20% daily mint tax to the HashVault; optional 50% trade-in from Unminted → real HASH.
 
 Retention: NFTs require ongoing HASH burns to unlock rewards. Failure destroys the NFT; rewards revert to Vault.
-
 Modularity: object types and mini-games are plug-in modules; NFTs level/merge over time.
-
 Admin clarity: live telemetry for Vault, users, NFTs, object events.
 
 1) Repos & Ownership Map
-
 Authoritative sources as of this document:
-
 Backend API & Services
 
-Repo: hash-backend
-
-URL: https://github.com/Bammrie/hash-backend
-
 Responsibilities: REST + Socket.IO, Prisma/Postgres, cron jobs (00:00 UTC mint run, NFT validation), Vault trade service, withdrawals, auth/session.
-
 Frontend Web App
-
-Repo: hash-frontend
-
-URL: https://github.com/Bammrie/hash-frontend
 
 Responsibilities: Game UI (10-object loop), wallet connect, balances, NFT dashboard (burn/merge), admin UI, charts.
 
 Contracts / Deployment
-
 Repo: hashtoken-deploy
 
 URL: https://github.com/Bammrie/hashtoken-deploy
-
 Responsibilities: HASH ERC-20 (already deployed), new NFT contracts (ERC-721 or 1155), scripting for mints/transfers, env wiring for Polygon RPC.
 
 Optional improvement: convert to a mono-repo (/apps/frontend, /apps/backend, /packages/contracts) once you’ve stabilized. Not required to move forward.
@@ -88,7 +70,6 @@ VITE_BACKEND_URL=https://api.hashequity.com
 
 
 Secrets live in Railway/hosted secret managers. Never commit them.
-
 3) Core Entities
 
 Player
@@ -97,11 +78,11 @@ Wallet-linked account; two balances: hash_balance and unminted_hash_balance.
 
 Object
 
-Spawned items on the game field; each has type, spawn_chance, and reward definition.
+Spawned items on the game field; each has type, spawn_chance, destroy reward(if clicked on enough times), time before dissapearance(# of seconds on screen before dissapering without destroy reward.
 
-Some objects pay unminted directly; others trigger mini-games (slot/plinko/wheel).
+Some objects pay unminted directly; others trigger mini-games (defined in the destroy reward), others mint NFTs.
 
-HashVault
+HashVault(Admin Login)
 
 Single hot wallet. Receives 20% of daily mint. Pays 50% trade-in conversions. Holds both real and unminted balances in DB.
 
@@ -132,7 +113,7 @@ model Object {
   id            String        @id @default(uuid())
   type          String        // circle | slot | plinko | wheel | future
   spawn_chance  Decimal
-  reward_type   String        // unminted_hash | mini_game
+  reward_type   String        // unminted_hash | mini_game | mint_NFT
   reward_value  Decimal?      // direct amount if reward_type == unminted_hash
   created_at    DateTime      @default(now())
 
@@ -556,4 +537,5 @@ POST /nfts/{id}/burn
 POST /nfts/merge
 GET  /admin/overview
 GET  /admin/spawn-table
+
 POST /admin/spawn-table
