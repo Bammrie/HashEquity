@@ -1,8 +1,8 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 
+const prisma = require("./prisma/client");
 const authRoutes = require("./routes/authRoutes");
 const gameRoutes = require("./routes/gameRoutes");
 
@@ -13,10 +13,28 @@ app.use(cors());
 app.use("/api/auth", authRoutes);
 app.use("/api/game", gameRoutes);
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
-
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+async function start() {
+  try {
+    await prisma.$connect();
+    console.log("✅ Database connected");
+
+    const server = app.listen(PORT, () =>
+      console.log(`🚀 Server running on port ${PORT}`)
+    );
+
+    const shutdown = async () => {
+      await prisma.$disconnect();
+      server.close(() => process.exit(0));
+    };
+
+    process.on("SIGTERM", shutdown);
+    process.on("SIGINT", shutdown);
+  } catch (err) {
+    console.error("❌ Database connection error:", err);
+    process.exit(1);
+  }
+}
+
+start();

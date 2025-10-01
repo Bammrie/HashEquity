@@ -51,16 +51,20 @@ export const GameObjectCard = ({ object, position, size }: Props) => {
 
   return (
     <button
+
       className={styles.objectButton}
       onClick={handleDestroy}
       style={style}
+
       type="button"
       aria-label={`Interact with ${object.definitionKey}`}
     >
+
       <span className={styles.imageWrapper} aria-hidden="true">
         <img src={object.image} alt="" className={styles.image} />
       </span>
       <span className={styles.srOnly}>Health {object.health}</span>
+
     </button>
   );
 };

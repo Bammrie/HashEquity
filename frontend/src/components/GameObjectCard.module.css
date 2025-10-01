@@ -17,6 +17,7 @@
 
 .objectButton:focus-visible {
   box-shadow: 0 0 0 4px rgba(140, 95, 255, 0.65);
+
 }
 
 .objectButton::after {
@@ -94,16 +95,7 @@
   inset: 0;
   border-radius: inherit;
   background:
-    conic-gradient(
-      from 120deg at 50% 50%,
-      rgba(255, 255, 255, 0.18),
-      transparent 30%,
-      rgba(111, 226, 255, 0.12) 60%,
-      transparent 80%
-    );
-  opacity: 0;
-  transform: rotate(0deg) scale(1.1);
-=======
+
 .imageWrapper {
   display: block;
   width: 100%;
