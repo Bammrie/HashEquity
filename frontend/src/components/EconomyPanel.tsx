@@ -1,12 +1,40 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAccount } from 'wagmi';
 import { useGameStore } from '../state/gameStore';
+import { fetchBalances } from '../services/gameApi';
 import styles from './EconomyPanel.module.css';
 
 export const EconomyPanel = () => {
+  const { address } = useAccount();
+  const syncBackendBalances = useGameStore((state) => state.syncBackendBalances);
+  const addEvent = useGameStore((state) => state.addEvent);
   const { hash, unminted, vault } = useGameStore((state) => state.balances);
   const settleDailyMint = useGameStore((state) => state.settleDailyMint);
   const tradeInForHash = useGameStore((state) => state.tradeInForHash);
   const [tradeAmount, setTradeAmount] = useState('0.00000000');
+
+  const { data, isFetching, refetch, error } = useQuery({
+    queryKey: ['balances', address],
+    queryFn: () => fetchBalances(address!),
+    enabled: Boolean(address),
+    refetchInterval: 30_000,
+  });
+
+  useEffect(() => {
+    if (data) {
+      syncBackendBalances({
+        hashBalance: data.hashBalance,
+        unmintedHash: data.unmintedHash,
+      });
+    }
+  }, [data, syncBackendBalances]);
+
+  useEffect(() => {
+    if (error instanceof Error) {
+      addEvent(`Failed to sync balances: ${error.message}`);
+    }
+  }, [error, addEvent]);
 
   const handleTradeSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -22,6 +50,11 @@ export const EconomyPanel = () => {
       <header>
         <h2>Economy</h2>
         <p>Daily minting taxes 20% to the Vault. Trades burn 50%.</p>
+        {address ? (
+          <p className={styles.connection}>Connected wallet: {address}</p>
+        ) : (
+          <p className={styles.connection}>Connect a wallet to sync live balances.</p>
+        )}
       </header>
       <dl className={styles.metrics}>
         <div>
@@ -38,8 +71,8 @@ export const EconomyPanel = () => {
         </div>
       </dl>
       <div className={styles.actions}>
-        <button type="button" onClick={settleDailyMint}>
-          Run Daily Mint
+        <button type="button" onClick={settleDailyMint} disabled={isFetching}>
+          {isFetching ? 'Syncing...' : 'Run Daily Mint'}
         </button>
         <form onSubmit={handleTradeSubmit} className={styles.tradeForm}>
           <label htmlFor="trade-amount">Trade In</label>
@@ -51,9 +84,16 @@ export const EconomyPanel = () => {
             min="0"
             value={tradeAmount}
             onChange={(event) => setTradeAmount(event.target.value)}
-          />
-          <button type="submit">Convert 50%</button>
+            />
+          <button type="submit" disabled={isFetching}>
+            Convert 50%
+          </button>
         </form>
+        {address && (
+          <button type="button" onClick={() => refetch()} className={styles.refreshButton} disabled={isFetching}>
+            Refresh Balances
+          </button>
+        )}
       </div>
     </section>
   );

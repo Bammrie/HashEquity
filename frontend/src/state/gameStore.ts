@@ -92,6 +92,8 @@ type GameState = {
   resolveMiniGame: () => void;
   settleDailyMint: () => void;
   tradeInForHash: (amount: number) => void;
+  syncBackendBalances: (payload: { hashBalance: number | string; unmintedHash: number | string }) => void;
+  addEvent: (message: string) => void;
 };
 
 const pushEvent = (events: EventEntry[], message: string): EventEntry[] => {
@@ -205,6 +207,30 @@ export const useGameStore = create<GameState>()(
           events,
         };
       }, false, 'tradeInForHash');
+    },
+    syncBackendBalances: ({ hashBalance, unmintedHash }) => {
+      const parse = (value: number | string) => {
+        const numeric = typeof value === 'string' ? Number(value) : value;
+        if (!Number.isFinite(numeric)) {
+          return 0;
+        }
+        return Number(numeric.toFixed(10));
+      };
+
+      set((state) => ({
+        ...state,
+        balances: {
+          ...state.balances,
+          hash: parse(hashBalance),
+          unminted: parse(unmintedHash),
+        },
+      }), false, 'syncBackendBalances');
+    },
+    addEvent: (message) => {
+      set((state) => ({
+        ...state,
+        events: pushEvent(state.events, message),
+      }), false, 'addEvent');
     },
   }))
 );
