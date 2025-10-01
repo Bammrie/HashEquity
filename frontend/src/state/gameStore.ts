@@ -26,6 +26,14 @@ export type RewardDefinition =
       miniGameType: MiniGameType;
     };
 
+type ObjectConfig = {
+  key: string;
+  image: string;
+  weight: number;
+  reward: RewardDefinition;
+  health: number;
+};
+
 export type ObjectDefinition = {
   key: string;
   image: string;
@@ -42,41 +50,60 @@ export type ActiveObject = {
   health: number;
 };
 
-const objectDefinitions: ObjectDefinition[] = [
-  { key: 'Object0-0', image: object00, spawnChance: 0.09, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
-  { key: 'Object0-1', image: object01, spawnChance: 0.09, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
-  { key: 'Object0-2', image: object02, spawnChance: 0.09, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
-  { key: 'Object0-3', image: object03, spawnChance: 0.09, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
-  { key: 'Object0-4', image: object04, spawnChance: 0.09, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
-  { key: 'Object1-0', image: object10, spawnChance: 0.14, reward: { type: 'unminted_hash', value: 0.00000002 }, health: 1 },
-  { key: 'Object1-1', image: object11, spawnChance: 0.14, reward: { type: 'unminted_hash', value: 0.000000028 }, health: 1 },
-  { key: 'Object1-2', image: object12, spawnChance: 0.1, reward: { type: 'unminted_hash', value: 0.000000032 }, health: 1 },
-  { key: 'Object1-3', image: object13, spawnChance: 0.08, reward: { type: 'unminted_hash', value: 0.00000004 }, health: 1 },
-  { key: 'Object1-4', image: object14, spawnChance: 0.08, reward: { type: 'unminted_hash', value: 0.00000006 }, health: 1 },
-  { key: 'Object2-0', image: object20, spawnChance: 0.11, reward: { type: 'unminted_hash', value: 0.00000008 }, health: 1 },
+const objectConfigs: ObjectConfig[] = [
+  { key: 'Object0-0', image: object00, weight: 8, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
+  { key: 'Object0-1', image: object01, weight: 8, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
+  { key: 'Object0-2', image: object02, weight: 8, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
+  { key: 'Object0-3', image: object03, weight: 8, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
+  { key: 'Object0-4', image: object04, weight: 8, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
+  { key: 'Object1-0', image: object10, weight: 7, reward: { type: 'unminted_hash', value: 0.00000002 }, health: 1 },
+  { key: 'Object1-1', image: object11, weight: 7, reward: { type: 'unminted_hash', value: 0.000000028 }, health: 1 },
+  { key: 'Object1-2', image: object12, weight: 6, reward: { type: 'unminted_hash', value: 0.000000032 }, health: 1 },
+  { key: 'Object1-3', image: object13, weight: 5, reward: { type: 'unminted_hash', value: 0.00000004 }, health: 1 },
+  { key: 'Object1-4', image: object14, weight: 5, reward: { type: 'unminted_hash', value: 0.00000006 }, health: 1 },
+  { key: 'Object2-0', image: object20, weight: 30, reward: { type: 'unminted_hash', value: 0.00000008 }, health: 1 },
 ];
+
+const totalWeight = objectConfigs.reduce((accumulator, config) => accumulator + config.weight, 0);
+
+const objectDefinitions: ObjectDefinition[] = objectConfigs.map((config) => ({
+  key: config.key,
+  image: config.image,
+  reward: config.reward,
+  health: config.health,
+  spawnChance: config.weight / totalWeight,
+}));
 
 let nextObjectId = 1;
 let nextMiniGameIndex = 0;
 
 const miniGameRewardSequence = [0.00000002, 0.000000035, 0.00000005, 0.0000001];
 
-const totalSpawnChance = objectDefinitions.reduce((total, definition) => total + definition.spawnChance, 0);
+const spawnCycle: string[] = (() => {
+  const queue = objectConfigs.map((config) => ({ key: config.key, remaining: config.weight }));
+  const sequence: string[] = [];
 
-const pickDefinition = (): ObjectDefinition => {
-  const roll = Math.random() * totalSpawnChance;
-  let accumulator = 0;
-  for (const definition of objectDefinitions) {
-    accumulator += definition.spawnChance;
-    if (roll <= accumulator) {
-      return definition;
+  let hasRemaining = true;
+  while (hasRemaining) {
+    hasRemaining = false;
+    for (const entry of queue) {
+      if (entry.remaining > 0) {
+        sequence.push(entry.key);
+        entry.remaining -= 1;
+        hasRemaining = true;
+      }
     }
   }
-  return objectDefinitions[objectDefinitions.length - 1];
-};
+
+  return sequence;
+})();
+
+let spawnCursor = 0;
 
 const createObject = (): ActiveObject => {
-  const definition = pickDefinition();
+  const key = spawnCycle[spawnCursor % spawnCycle.length];
+  spawnCursor += 1;
+  const definition = objectDefinitions.find((entry) => entry.key === key) ?? objectDefinitions[0];
   const id = `object-${nextObjectId++}`;
   return {
     id,
