@@ -15,7 +15,11 @@ import object20 from '../../images/Object2-0.png';
 
 export type MiniGameType = 'plinko';
 
+
 type RewardDefinition =
+
+export type RewardDefinition =
+
   | {
       type: 'unminted_hash';
       value: number;
@@ -25,6 +29,7 @@ type RewardDefinition =
       label: string;
       miniGameType: MiniGameType;
     };
+
 
 export type GameObjectType =
   | 'Object0-0'
@@ -41,6 +46,10 @@ export type GameObjectType =
 
 export type SpawnDefinition = {
   key: GameObjectType;
+
+export type ObjectDefinition = {
+  key: string;
+
   image: string;
   spawnChance: number;
   reward: RewardDefinition;
@@ -49,11 +58,16 @@ export type SpawnDefinition = {
 
 export type ActiveObject = {
   id: string;
+
   definitionKey: GameObjectType;
+
+  definitionKey: string;
+
   image: string;
   reward: RewardDefinition;
   health: number;
 };
+
 
 const spawnTable: SpawnDefinition[] = [
   { key: 'Object0-0', image: object00, spawnChance: 0.08, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
@@ -67,6 +81,20 @@ const spawnTable: SpawnDefinition[] = [
   { key: 'Object1-3', image: object13, spawnChance: 0.05, reward: { type: 'unminted_hash', value: 0.00000004 }, health: 1 },
   { key: 'Object1-4', image: object14, spawnChance: 0.05, reward: { type: 'unminted_hash', value: 0.00000006 }, health: 1 },
   { key: 'Object2-0', image: object20, spawnChance: 0.3, reward: { type: 'unminted_hash', value: 0.00000008 }, health: 1 },
+
+const objectDefinitions: ObjectDefinition[] = [
+  { key: 'Object0-0', image: object00, spawnChance: 0.01, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
+  { key: 'Object0-1', image: object01, spawnChance: 0.004, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
+  { key: 'Object0-2', image: object02, spawnChance: 0.003, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
+  { key: 'Object0-3', image: object03, spawnChance: 0.002, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
+  { key: 'Object0-4', image: object04, spawnChance: 0.001, reward: { type: 'mini_game', label: 'Plinko Mini Game', miniGameType: 'plinko' }, health: 1 },
+  { key: 'Object1-0', image: object10, spawnChance: 0.8, reward: { type: 'unminted_hash', value: 0.00000001 }, health: 1 },
+  { key: 'Object1-1', image: object11, spawnChance: 0.09, reward: { type: 'unminted_hash', value: 0.00000005 }, health: 2 },
+  { key: 'Object1-2', image: object12, spawnChance: 0.04, reward: { type: 'unminted_hash', value: 0.0000001 }, health: 5 },
+  { key: 'Object1-3', image: object13, spawnChance: 0.03, reward: { type: 'unminted_hash', value: 0.0000025 }, health: 10 },
+  { key: 'Object1-4', image: object14, spawnChance: 0.015, reward: { type: 'unminted_hash', value: 0.00000006 }, health: 1 },
+  { key: 'Object2-0', image: object20, spawnChance: 0.005, reward: { type: 'unminted_hash', value: 0.00000008 }, health: 1 },
+
 ];
 
 const totalConfiguredChance = spawnTable.reduce((accumulator, config) => accumulator + config.spawnChance, 0);
@@ -83,6 +111,7 @@ let nextObjectId = 1;
 let nextMiniGameIndex = 0;
 
 const miniGameRewardSequence = [0.00000002, 0.000000035, 0.00000005, 0.0000001];
+
 
 const buildSpawnCycle = (definitions: SpawnDefinition[]): GameObjectType[] => {
   if (definitions.length === 0) {
@@ -150,14 +179,33 @@ const spawnCycleKeys = buildSpawnCycle(normalizedSpawnTable);
 
 let spawnCursor = 0;
 
+const totalSpawnChance = objectDefinitions.reduce((total, definition) => total + definition.spawnChance, 0);
+
+const pickDefinition = (): ObjectDefinition => {
+  const roll = Math.random() * totalSpawnChance;
+  let accumulator = 0;
+  for (const definition of objectDefinitions) {
+    accumulator += definition.spawnChance;
+    if (roll <= accumulator) {
+      return definition;
+    }
+  }
+  return objectDefinitions[objectDefinitions.length - 1];
+};
+
+
 const resolveDefinitionByKey = (key: GameObjectType): SpawnDefinition =>
   normalizedSpawnTable.find((entry) => entry.key === key) ?? normalizedSpawnTable[0];
 
 const createObject = (): ActiveObject => {
+
   const cycle = spawnCycleKeys.length > 0 ? spawnCycleKeys : normalizedSpawnTable.map((definition) => definition.key);
   const key = cycle[spawnCursor % cycle.length];
   spawnCursor += 1;
   const definition = resolveDefinitionByKey(key);
+
+  const definition = pickDefinition();
+
   const id = `object-${nextObjectId++}`;
   return {
     id,
@@ -343,4 +391,8 @@ export const useGameStore = create<GameState>()(
   }))
 );
 
+
 export const spawnTableSpec = normalizedSpawnTable;
+
+export const spawnTableSpec = objectDefinitions;
+
