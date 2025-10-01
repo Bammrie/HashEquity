@@ -141,8 +141,10 @@ export const GameBoard = () => {
     return () => window.cancelAnimationFrame(animationFrame);
   }, [objects, bounds]);
 
+  const boardClassName = `${styles.board} ${styles.boardSurface}`;
+
   return (
-    <section className={styles.board} aria-label="Active game objects" ref={boardRef}>
+    <section className={boardClassName} aria-label="Active game objects" ref={boardRef}>
       {objects.map((object) => {
         const state = positions[object.id];
         if (!state) {

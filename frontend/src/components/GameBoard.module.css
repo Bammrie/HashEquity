@@ -1,6 +1,13 @@
 .board {
-  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
   width: 100%;
+}
+
+.boardSurface {
+  position: relative;
+  display: block;
   min-height: clamp(360px, 58vh, 620px);
   border-radius: 32px;
   border: 1px solid rgba(126, 211, 255, 0.4);
@@ -18,14 +25,12 @@
   backdrop-filter: blur(18px);
 }
 
-.board::before {
+.boardSurface::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(
-      rgba(255, 255, 255, 0.03) 1px,
-      transparent 1px
-    ),
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 80px 80px;
   opacity: 0.7;
@@ -34,7 +39,7 @@
   z-index: 0;
 }
 
-.board::after {
+.boardSurface::after {
   content: '';
   position: absolute;
   inset: 18px;
