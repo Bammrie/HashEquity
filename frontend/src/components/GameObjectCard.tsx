@@ -68,7 +68,8 @@ export const GameObjectCard = ({ object }: Props) => {
             wallet: address,
             objectId: object.id,
             reward: object.reward.type === 'unminted_hash' ? object.reward.value : undefined,
-            objectName: object.type,
+            objectName: object.sprite.name,
+            objectImage: object.sprite.image,
           });
         }
       }}
