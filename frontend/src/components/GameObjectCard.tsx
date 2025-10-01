@@ -37,7 +37,7 @@ export const GameObjectCard = ({ object }: Props) => {
 
   return (
     <button
-      className={styles.card}
+      className={`${styles.card} ${styles.cardFloating}`}
       onClick={() => {
         destroyObject(object.id);
         if (address) {
@@ -51,9 +51,17 @@ export const GameObjectCard = ({ object }: Props) => {
       }}
       type="button"
     >
-      <span className={styles.label}>{object.type}</span>
-      <span className={styles.reward}>{rewardLabel(object)}</span>
-      <span className={styles.meta}>Health: {object.health}</span>
+      <span className={styles.cardGlint} aria-hidden="true" />
+      <span className={styles.cardContent}>
+        <span className={styles.label}>{object.type}</span>
+        <span className={styles.reward}>{rewardLabel(object)}</span>
+        <span className={styles.meta}>Health: {object.health}</span>
+      </span>
+      <span className={styles.sparkles} aria-hidden="true">
+        <span className={styles.sparkle} />
+        <span className={styles.sparkle} />
+        <span className={styles.sparkle} />
+      </span>
     </button>
   );
 };
