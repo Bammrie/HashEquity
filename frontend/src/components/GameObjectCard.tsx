@@ -24,6 +24,7 @@ export const GameObjectCard = ({ object }: Props) => {
       height: `${object.sprite.size}px`,
       '--float-duration': `${object.motion.floatDuration}s`,
       '--float-delay': `${object.motion.floatDelay}s`,
+      '--sprite-delay': `${-object.motion.floatDelay}s`,
       '--drift-x': `${object.motion.driftX}px`,
       '--drift-y': `${object.motion.driftY}px`,
     };
@@ -38,17 +39,19 @@ export const GameObjectCard = ({ object }: Props) => {
     object.sprite.size,
   ]);
 
+  const label = `${object.sprite.name} — ${rewardLabel(object)}`;
+
   return (
     <button
       className={styles.card}
       onClick={() => destroyObject(object.id)}
       type="button"
       style={floatingStyle}
-      aria-label={`${object.sprite.name} — ${rewardLabel(object)}`}
+      aria-label={label}
     >
-      <span className={styles.accessibleLabel}>{`${object.sprite.name} ${rewardLabel(object)}`}</span>
+      <span className={styles.visuallyHidden}>{label}</span>
       <img src={object.sprite.image} alt="" className={styles.sprite} />
-      <span className={styles.caption}>
+      <span className={styles.caption} aria-hidden="true">
         <span className={styles.name}>{object.sprite.name}</span>
         <span className={styles.reward}>{rewardLabel(object)}</span>
       </span>

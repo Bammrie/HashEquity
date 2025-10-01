@@ -34,6 +34,12 @@ export type GameObjectType =
   | 'plinko'
   | 'vault';
 
+export type SpawnDefinition = {
+  type: GameObjectType;
+  spawnChance: number;
+  reward: RewardDefinition;
+};
+
 type ObjectSprite = {
   name: string;
   image: string;
@@ -49,80 +55,37 @@ type ObjectMotion = {
   driftY: number;
 };
 
-export type SpawnDefinition = {
-  type: GameObjectType;
-  spawnChance: number;
-  reward: RewardDefinition;
-  sprite: ObjectSprite;
-};
-
 export type ActiveObject = SpawnDefinition & {
   id: string;
   health: number;
+  sprite: ObjectSprite;
   motion: ObjectMotion;
 };
 
 const spawnTable: SpawnDefinition[] = [
-  {
-    type: 'circle',
-    spawnChance: 0.13,
-    reward: { type: 'unminted_hash', value: 0.000000012 },
-    sprite: { name: 'Lumen Seed', image: objectSprite00, size: 110 },
-  },
-  {
-    type: 'triangle',
-    spawnChance: 0.1,
-    reward: { type: 'unminted_hash', value: 0.000000016 },
-    sprite: { name: 'Flux Bloom', image: objectSprite01, size: 120 },
-  },
-  {
-    type: 'hexagon',
-    spawnChance: 0.1,
-    reward: { type: 'unminted_hash', value: 0.00000002 },
-    sprite: { name: 'Spectral Prism', image: objectSprite02, size: 130 },
-  },
-  {
-    type: 'prism',
-    spawnChance: 0.08,
-    reward: { type: 'unminted_hash', value: 0.000000024 },
-    sprite: { name: 'Nebula Coil', image: objectSprite03, size: 124 },
-  },
-  {
-    type: 'cube',
-    spawnChance: 0.08,
-    reward: { type: 'unminted_hash', value: 0.000000028 },
-    sprite: { name: 'Vault Shard', image: objectSprite04, size: 120 },
-  },
-  {
-    type: 'diamond',
-    spawnChance: 0.11,
-    reward: { type: 'unminted_hash', value: 0.000000032 },
-    sprite: { name: 'Auric Spire', image: objectSprite10, size: 138 },
-  },
-  {
-    type: 'wheel',
-    spawnChance: 0.1,
-    reward: { type: 'mini_game', label: 'Wheel Spin' },
-    sprite: { name: 'Spin Catalyst', image: objectSprite11, size: 134 },
-  },
-  {
-    type: 'slot',
-    spawnChance: 0.1,
-    reward: { type: 'mini_game', label: 'Slot Rush' },
-    sprite: { name: 'Slot Matrix', image: objectSprite12, size: 126 },
-  },
-  {
-    type: 'plinko',
-    spawnChance: 0.1,
-    reward: { type: 'mini_game', label: 'Plinko Drop' },
-    sprite: { name: 'Plinko Cradle', image: objectSprite13, size: 132 },
-  },
-  {
-    type: 'vault',
-    spawnChance: 0.1,
-    reward: { type: 'unminted_hash', value: 0.00000005 },
-    sprite: { name: 'Hash Vault Core', image: objectSprite14, size: 148 },
-  },
+  { type: 'circle', spawnChance: 0.18, reward: { type: 'unminted_hash', value: 0.00000001 } },
+  { type: 'triangle', spawnChance: 0.12, reward: { type: 'unminted_hash', value: 0.000000014 } },
+  { type: 'hexagon', spawnChance: 0.1, reward: { type: 'unminted_hash', value: 0.000000018 } },
+  { type: 'prism', spawnChance: 0.08, reward: { type: 'unminted_hash', value: 0.00000002 } },
+  { type: 'cube', spawnChance: 0.07, reward: { type: 'unminted_hash', value: 0.000000024 } },
+  { type: 'diamond', spawnChance: 0.1, reward: { type: 'unminted_hash', value: 0.00000003 } },
+  { type: 'wheel', spawnChance: 0.12, reward: { type: 'mini_game', label: 'Wheel Spin' } },
+  { type: 'slot', spawnChance: 0.08, reward: { type: 'mini_game', label: 'Slot Rush' } },
+  { type: 'plinko', spawnChance: 0.08, reward: { type: 'mini_game', label: 'Plinko Drop' } },
+  { type: 'vault', spawnChance: 0.07, reward: { type: 'unminted_hash', value: 0.00000005 } },
+];
+
+const spriteAtlas: ObjectSprite[] = [
+  { name: 'Lumen Seed', image: objectSprite00, size: 108 },
+  { name: 'Flux Bloom', image: objectSprite01, size: 120 },
+  { name: 'Spectral Prism', image: objectSprite02, size: 128 },
+  { name: 'Nebula Coil', image: objectSprite03, size: 118 },
+  { name: 'Vault Shard', image: objectSprite04, size: 116 },
+  { name: 'Auric Spire', image: objectSprite10, size: 134 },
+  { name: 'Spin Catalyst', image: objectSprite11, size: 132 },
+  { name: 'Slot Matrix', image: objectSprite12, size: 126 },
+  { name: 'Plinko Cradle', image: objectSprite13, size: 130 },
+  { name: 'Hash Vault Core', image: objectSprite14, size: 144 },
 ];
 
 let nextObjectId = 1;
@@ -145,12 +108,14 @@ const createMotion = (): ObjectMotion => ({
 
 const createObject = (): ActiveObject => {
   const definition = spawnTable[spawnCursor % spawnTable.length];
+  const sprite = spriteAtlas[spawnCursor % spriteAtlas.length];
   spawnCursor += 1;
   const id = `object-${nextObjectId++}`;
   return {
     ...definition,
     id,
     health: definition.type === 'vault' ? 3 : 1,
+    sprite: { ...sprite },
     motion: createMotion(),
   };
 };
@@ -185,8 +150,6 @@ type GameState = {
   resolveMiniGame: () => void;
   settleDailyMint: () => void;
   tradeInForHash: (amount: number) => void;
-  syncBackendBalances: (payload: { hashBalance: number | string; unmintedHash: number | string }) => void;
-  addEvent: (message: string) => void;
 };
 
 const pushEvent = (events: EventEntry[], message: string): EventEntry[] => {
@@ -306,30 +269,6 @@ export const useGameStore = create<GameState>()(
           events,
         };
       }, false, 'tradeInForHash');
-    },
-    syncBackendBalances: ({ hashBalance, unmintedHash }) => {
-      const parse = (value: number | string) => {
-        const numeric = typeof value === 'string' ? Number(value) : value;
-        if (!Number.isFinite(numeric)) {
-          return 0;
-        }
-        return Number(numeric.toFixed(10));
-      };
-
-      set((state) => ({
-        ...state,
-        balances: {
-          ...state.balances,
-          hash: parse(hashBalance),
-          unminted: parse(unmintedHash),
-        },
-      }), false, 'syncBackendBalances');
-    },
-    addEvent: (message) => {
-      set((state) => ({
-        ...state,
-        events: pushEvent(state.events, message),
-      }), false, 'addEvent');
     },
   }))
 );
