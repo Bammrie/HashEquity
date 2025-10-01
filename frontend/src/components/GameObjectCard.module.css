@@ -1,177 +1,79 @@
-.card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
-  width: 100%;
-  padding: 1rem 1.2rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(152, 132, 255, 0.25);
-  background: linear-gradient(160deg, rgba(57, 41, 124, 0.85), rgba(20, 16, 60, 0.92));
-  box-shadow: 0 20px 40px rgba(31, 20, 82, 0.25);
-  color: var(--text-primary, #f5f8ff);
+.objectButton {
+  position: absolute;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
   cursor: pointer;
-  text-align: left;
-  text-transform: capitalize;
-  overflow: hidden;
-  transform: translateY(0);
-  transition:
-    transform 0.35s ease,
-    box-shadow 0.35s ease,
-    border-color 0.35s ease;
+  touch-action: manipulation;
+  will-change: transform;
+  transition: transform 0.2s ease;
+  z-index: 1;
 }
 
-.card::before,
-.card::after {
+.objectButton:focus {
+  outline: none;
+}
+
+.objectButton:focus-visible {
+  box-shadow: 0 0 0 4px rgba(140, 95, 255, 0.65);
+}
+
+.objectButton::after {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 242, 255, 0.45), transparent 60%);
   opacity: 0;
-  transition: opacity 0.35s ease;
-  pointer-events: none;
+  transition: opacity 0.28s ease;
+  filter: blur(6px);
+  z-index: -1;
 }
 
-.card::before {
-  background: radial-gradient(circle at 20% 20%, rgba(187, 141, 255, 0.38), transparent 55%);
-  filter: blur(0.8px);
+.imageWrapper {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(143, 107, 255, 0.05));
+  box-shadow: 0 20px 45px rgba(14, 10, 55, 0.65);
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease,
+    filter 0.28s ease;
 }
 
-.card::after {
-  background: radial-gradient(circle at 80% 80%, rgba(111, 226, 255, 0.4), transparent 60%);
-  mix-blend-mode: screen;
+.objectButton:hover .imageWrapper,
+.objectButton:focus-visible .imageWrapper {
+  transform: scale(1.08);
+  box-shadow: 0 25px 65px rgba(18, 12, 60, 0.75);
+  filter: saturate(1.1);
 }
 
-.card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(187, 141, 255, 0.55);
-  box-shadow: 0 28px 54px rgba(62, 36, 160, 0.45);
-}
-
-.card:hover::before,
-.card:hover::after {
+.objectButton:hover::after,
+.objectButton:focus-visible::after {
   opacity: 1;
 }
 
-.card:focus-visible {
-  outline: 2px solid rgba(166, 132, 255, 0.65);
-  outline-offset: 3px;
-}
-
-.cardContent {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
+.image {
+  display: block;
   width: 100%;
-}
-
-.sparkles {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
+  height: 100%;
+  object-fit: cover;
   pointer-events: none;
 }
 
-.label {
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: 0.03em;
-}
-
-.reward {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: rgba(213, 235, 255, 0.78);
-}
-
-.meta {
-  font-size: 0.78rem;
-  color: rgba(199, 206, 255, 0.58);
-}
-
-.cardFloating {
-  animation: collectibleFloat 4.8s ease-in-out infinite;
-}
-
-.cardFloating:hover {
-  animation-play-state: paused;
-}
-
-.cardGlint {
+.srOnly {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    conic-gradient(from 120deg at 50% 50%, rgba(255, 255, 255, 0.18), transparent 30%, rgba(111, 226, 255, 0.12) 60%, transparent 80%);
-  opacity: 0;
-  transform: rotate(0deg) scale(1.1);
-  transition:
-    opacity 0.5s ease,
-    transform 1.4s ease;
-  mix-blend-mode: screen;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.card:hover .cardGlint {
-  opacity: 0.65;
-  transform: rotate(12deg) scale(1.18);
-}
-
-.sparkles .sparkle {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));
-  opacity: 0;
-  animation: sparkle 6s linear infinite;
-  pointer-events: none;
-}
-
-.sparkles .sparkle:nth-child(1) {
-  top: 14%;
-  left: 78%;
-  animation-delay: 0.4s;
-}
-
-.sparkles .sparkle:nth-child(2) {
-  bottom: 18%;
-  right: 22%;
-  animation-delay: 1.7s;
-}
-
-.sparkles .sparkle:nth-child(3) {
-  top: 36%;
-  right: 8%;
-  animation-delay: 3s;
-}
-
-@keyframes collectibleFloat {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes sparkle {
-  0%,
-  100% {
-    opacity: 0;
-    transform: scale(0.4) translate3d(0, 0, 0);
-  }
-  40% {
-    opacity: 1;
-    transform: scale(1) translate3d(-4px, -6px, 0);
-  }
-  60% {
-    opacity: 0.6;
-    transform: scale(0.7) translate3d(6px, 4px, 0);
-  }
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
