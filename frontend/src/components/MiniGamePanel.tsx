@@ -9,7 +9,7 @@ export const MiniGamePanel = () => {
     return (
       <section className={styles.panel}>
         <h2>Mini Games</h2>
-        <p>No mini-games are active. Destroy wheel, slot, or plinko objects to trigger bonuses.</p>
+        <p className={styles.idle}>No bonuses are spinning right now. Annihilate glowing Plinko cores to kick off a side mission.</p>
       </section>
     );
   }
@@ -17,7 +17,8 @@ export const MiniGamePanel = () => {
   return (
     <section className={styles.panel}>
       <h2>{miniGame.label}</h2>
-      <p>Reward: {miniGame.payout.toFixed(10)} unminted HASH</p>
+      <p className={styles.reward}>Reward: {miniGame.payout.toFixed(10)} unminted HASH</p>
+      <p className={styles.subtitle}>Resolve the mini game to beam the payout into your unminted stash.</p>
       <button type="button" onClick={resolveMiniGame} disabled={miniGame.status === 'resolved'}>
         {miniGame.status === 'resolved' ? 'Resolved' : 'Resolve Bonus'}
       </button>

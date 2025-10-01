@@ -48,8 +48,8 @@ export const EconomyPanel = () => {
   return (
     <section className={styles.panel}>
       <header>
-        <h2>Economy</h2>
-        <p>Daily minting taxes 20% to the Vault. Trades burn 50%.</p>
+        <h2>Vault &amp; Economy</h2>
+        <p>Steer the HASH flow — settle the daily mint run and convert unminted stash in one tap.</p>
         {address ? (
           <p className={styles.connection}>Connected wallet: {address}</p>
         ) : (
@@ -72,7 +72,7 @@ export const EconomyPanel = () => {
       </dl>
       <div className={styles.actions}>
         <button type="button" onClick={settleDailyMint} disabled={isFetching}>
-          {isFetching ? 'Syncing...' : 'Run Daily Mint'}
+          {isFetching ? 'Syncing…' : 'Deploy Daily Mint'}
         </button>
         <form onSubmit={handleTradeSubmit} className={styles.tradeForm}>
           <label htmlFor="trade-amount">Trade In</label>

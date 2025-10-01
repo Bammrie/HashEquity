@@ -1,17 +1,114 @@
 .topBar {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 2.5rem;
+  padding-bottom: 2.5rem;
+}
+
+.branding {
+  display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 0 2rem;
+  gap: 1.75rem;
+  position: relative;
 }
 
-.topBar h1 {
+.branding::after {
+  content: '';
+  position: absolute;
+  inset: -30% -10% -40% 50%;
+  background: radial-gradient(circle at top, rgba(123, 92, 255, 0.45), transparent 65%);
+  z-index: -1;
+  filter: blur(0.5rem);
+}
+
+.logo {
+  width: clamp(180px, 22vw, 220px);
+  height: auto;
+  filter: drop-shadow(0 12px 35px rgba(111, 226, 255, 0.45));
+}
+
+.headline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.tag {
+  align-self: flex-start;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(124, 242, 255, 0.18), rgba(143, 107, 255, 0.18));
+  border: 1px solid rgba(143, 107, 255, 0.35);
+  color: rgba(241, 249, 255, 0.85);
+}
+
+.headline h1 {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: clamp(1.85rem, 3vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
-.topBar p {
-  margin: 0.35rem 0 0;
-  color: rgba(245, 248, 255, 0.65);
+.headline p {
+  margin: 0;
+  max-width: 520px;
+  color: rgba(214, 230, 255, 0.8);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 1.1rem;
+  border-radius: 1rem;
+  background: linear-gradient(160deg, rgba(11, 20, 46, 0.92), rgba(66, 32, 95, 0.65));
+  border: 1px solid rgba(143, 107, 255, 0.35);
+  box-shadow: 0 20px 45px rgba(15, 10, 60, 0.55);
+}
+
+.status span {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: rgba(196, 216, 255, 0.65);
+}
+
+.status strong {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #eff6ff;
+}
+
+@media (max-width: 960px) {
+  .topBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.75rem;
+  }
+
+  .actions {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .branding {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .branding::after {
+    inset: -30% -30% -50% -20%;
+  }
 }
