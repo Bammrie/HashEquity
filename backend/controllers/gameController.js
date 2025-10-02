@@ -1,7 +1,6 @@
 const Stats = require("../models/Stats");
 const User = require("../models/User");
-
-const normalizeWallet = (wallet = "") => wallet.trim().toLowerCase();
+const { normalizeWallet } = require("../config/admin");
 
 const toNumber = (value) => {
   if (typeof value === "number") {
@@ -45,7 +44,11 @@ exports.getBalances = async (req, res) => {
       return res.status(400).json({ error: "Missing wallet query parameter" });
     }
 
-    const user = await User.findOne({ walletAddress: wallet });
+    const user = await User.findOneAndUpdate(
+      { walletAddress: wallet },
+      { $setOnInsert: { walletAddress: wallet } },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
 
     res.json({
       hashBalance: toNumber(user?.hashBalance),

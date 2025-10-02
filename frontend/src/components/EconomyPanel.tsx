@@ -14,6 +14,10 @@ export const EconomyPanel = () => {
   const tradeInForHash = useGameStore((state) => state.tradeInForHash);
   const [tradeAmount, setTradeAmount] = useState('0.00000000');
 
+  const fillMaxTrade = () => {
+    setTradeAmount(unminted.toFixed(10));
+  };
+
   const { data, isFetching, refetch, error } = useQuery({
     queryKey: ['balances', address],
     queryFn: () => fetchBalances(address!),
@@ -76,15 +80,20 @@ export const EconomyPanel = () => {
         </button>
         <form onSubmit={handleTradeSubmit} className={styles.tradeForm}>
           <label htmlFor="trade-amount">Trade In</label>
-          <input
-            id="trade-amount"
-            name="trade-amount"
-            type="number"
-            step="0.00000001"
-            min="0"
-            value={tradeAmount}
-            onChange={(event) => setTradeAmount(event.target.value)}
+          <div className={styles.tradeInputGroup}>
+            <input
+              id="trade-amount"
+              name="trade-amount"
+              type="number"
+              step="0.00000001"
+              min="0"
+              value={tradeAmount}
+              onChange={(event) => setTradeAmount(event.target.value)}
             />
+            <button type="button" className={styles.maxButton} onClick={fillMaxTrade}>
+              Max
+            </button>
+          </div>
           <button type="submit" disabled={isFetching}>
             Convert 50%
           </button>

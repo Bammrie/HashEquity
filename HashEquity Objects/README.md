@@ -2,17 +2,20 @@
 
 The interactive coin art used on the HashEquity game board now lives under `frontend/src/assets/coins` where the Vite bundler can import it directly.
 
-This directory is kept to document the available coin objects and provide a quick reference to the canonical filenames:
+This directory is kept to document the available coin objects and provide a quick reference to the canonical filenames. The
+current spawn table uses the numbered PNG set below, which mirrors the data encoded in `frontend/src/state/spawnDefinitions.ts`:
 
-- `hash-core.svg`
-- `prism-spark.svg`
-- `quantum-lattice.svg`
-- `flux-prism.svg`
-- `forge-block.svg`
-- `nova-gem.svg`
-- `wheel-token.svg`
-- `jackpot-chip.svg`
-- `plinko-disc.svg`
-- `vault-emblem.svg`
+- `Object0-0.png`
+- `Object0-1.png`
+- `Object0-2.png`
+- `Object0-3.png`
+- `Object0-4.png`
+- `Object0-5.png`
+- `Object0-6.png`
+- `Object0-7.png`
+- `Object0-8.png`
+- `Object0-9.png`
+- `Object1-0.png`
 
-When adding new objects, drop the source art here and copy it into `frontend/src/assets/coins` so it can be bundled with the frontend app.
+When adding new objects, drop the source art here and copy it into `frontend/src/assets/coins` so it can be bundled with the
+frontend app. Remember to update the spawn table definitions if filenames or reward data change.
