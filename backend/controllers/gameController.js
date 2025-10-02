@@ -3,6 +3,15 @@ const User = require("../models/User");
 
 const normalizeWallet = (wallet = "") => wallet.trim().toLowerCase();
 
+const toNumber = (value) => {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
 const humanizeObjectId = (objectId = "") =>
   objectId
     .replace(/[-_]+/g, " ")
@@ -19,7 +28,7 @@ exports.getStats = async (_req, res) => {
       objectId: stat.objectId,
       name: stat.name || humanizeObjectId(stat.objectId),
       image: stat.image || "",
-      destroyed: stat.destroyed || 0
+      destroyed: toNumber(stat.destroyed)
     }));
 
     res.json(formatted);
@@ -39,8 +48,8 @@ exports.getBalances = async (req, res) => {
     const user = await User.findOne({ walletAddress: wallet });
 
     res.json({
-      hashBalance: user?.hashBalance || 0,
-      unmintedHash: user?.unmintedHash || 0
+      hashBalance: toNumber(user?.hashBalance),
+      unmintedHash: toNumber(user?.unmintedHash)
     });
   } catch (err) {
     console.error("Balance fetch error:", err);
@@ -58,7 +67,7 @@ exports.destroyObject = async (req, res) => {
 
     const normalizedWallet = normalizeWallet(wallet);
 
-    const numericReward = Number(reward) || 0;
+    const numericReward = toNumber(reward);
 
     const userUpdate = {
       $setOnInsert: { walletAddress: normalizedWallet }
@@ -93,8 +102,8 @@ exports.destroyObject = async (req, res) => {
     });
 
     res.json({
-      hashBalance: user.hashBalance,
-      unmintedHash: user.unmintedHash
+      hashBalance: toNumber(user?.hashBalance),
+      unmintedHash: toNumber(user?.unmintedHash)
     });
   } catch (err) {
     console.error("Destroy error:", err);
