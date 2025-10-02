@@ -56,6 +56,7 @@ export const GameObjectCard = ({ object, position, size }: Props) => {
       onClick={handleDestroy}
       style={style}
 
+
       type="button"
       aria-label={`Interact with ${object.definitionKey}`}
     >

@@ -34,7 +34,7 @@ Runtime stack
 
 Frontend: React + Vite (or Next.js if you prefer SSR later), Zustand/Redux, wagmi + rainbowkit, Recharts.
 
-Backend: Node.js + Express, Prisma + PostgreSQL, Socket.IO, node-cron, ethers.js.
+Backend: Node.js + Express, Mongoose + MongoDB, Socket.IO, node-cron, ethers.js.
 
 Chain: Polygon (MATIC), public RPC (Alchemy/Infura/Ankr/etc.).
 
@@ -42,13 +42,13 @@ Railway
 
 Backend service (Node)
 
-Postgres DB
+MongoDB
 
 Frontend hosting (if used) or point to S3/CloudFront later
 
 Environment variables (backend)
 
-DATABASE_URL=postgresql://...
+MONGO_URI=mongodb+srv://...
 CHAIN_ID=137
 RPC_URL=<polygon-rpc>
 VAULT_PRIVATE_KEY=<hot-wallet key>    # protect
@@ -90,93 +90,28 @@ NFT
 
 On-chain token with burn requirements and a pending reward. States: active, destroyed, completed, mergeable.
 
-4) Data Model (Prisma)
+4) Data Model (MongoDB)
 
-Decimal columns are for token amounts; configure Prisma decimal to string parsing for JS.
+Persistence lives in MongoDB with Mongoose models. Key collections:
 
-// prisma/schema.prisma
+User
+- `walletAddress` (string, lowercase, unique) — primary key for logins.
+- `hashBalance` (number) — minted HASH already settled to the account.
+- `unmintedHash` (number) — pending rewards awaiting the daily mint.
+- Automatic timestamps track creation/update moments.
 
-model User {
-  id                      String       @id @default(uuid())
-  wallet_address          String       @unique
-  email                   String?
-  hash_balance            Decimal      @default(0)
-  unminted_hash_balance   Decimal      @default(0)
-  created_at              DateTime     @default(now())
-  updated_at              DateTime     @updatedAt
+Stats
+- `objectId` (string, unique) — identifier the frontend sends when destroying an object.
+- `name` (string, optional) — friendly label to display; fallback to a humanized objectId.
+- `image` (string, optional) — URL for the collectible art.
+- `destroyed` (number) — total destroy count for leaderboard ordering.
+- Automatic timestamps.
 
-  object_events           ObjectEvent[]
-  nfts                    NFT[]        @relation("NFT_owner")
-}
-
-model Object {
-  id            String        @id @default(uuid())
-  type          String        // circle | slot | plinko | wheel | future
-  spawn_chance  Decimal
-  reward_type   String        // unminted_hash | mini_game | mint_NFT
-  reward_value  Decimal?      // direct amount if reward_type == unminted_hash
-  created_at    DateTime      @default(now())
-
-  object_events ObjectEvent[]
-}
-
-model ObjectEvent {
-  id            String   @id @default(uuid())
-  user_id       String
-  object_id     String
-  event_type    String   // destroy | mini_game_outcome
-  reward_amount Decimal
-  timestamp     DateTime @default(now())
-
-  user   User   @relation(fields: [user_id], references: [id])
-  object Object @relation(fields: [object_id], references: [id])
-
-  @@index([user_id, timestamp])
-}
-
-model Vault {
-  id                      String   @id @default(uuid())
-  wallet_address          String
-  hash_balance            Decimal  @default(0)
-  unminted_hash_balance   Decimal  @default(0)
-  updated_at              DateTime @updatedAt
-}
-
-model NFT {
-  id                           String   @id @default(uuid())
-  token_id                     String   // on-chain id
-  owner_id                     String
-  level                        Int
-  burn_requirement_amount      Decimal  // amount per period
-  burn_requirement_frequency   String   // daily | weekly
-  requirement_window_started_at DateTime?
-  progress_counter             Int      @default(0)
-  status                       String   // active | destroyed | completed | mergeable
-  reward_value                 Decimal  // on-chain payout to release when completed
-  created_at                   DateTime @default(now())
-  updated_at                   DateTime @updatedAt
-
-  owner    User     @relation("NFT_owner", fields: [owner_id], references: [id])
-  events   NFTEvent[]
-}
-
-model NFTEvent {
-  id         String   @id @default(uuid())
-  nft_id     String
-  user_id    String
-  event_type String   // burn | fail | complete | merge
-  amount     Decimal
-  timestamp  DateTime @default(now())
-
-  nft   NFT  @relation(fields: [nft_id], references: [id])
-  user  User @relation(fields: [user_id], references: [id])
-
-  @@index([nft_id, timestamp])
-}
+Add secondary collections (ObjectEvent, Vault, NFT, etc.) as the corresponding features come online. Use compound indexes for frequent lookups (e.g., `{ walletAddress: 1 }`, `{ objectId: 1 }`, `{ userId: 1, timestamp: -1 }`).
 
 Migration notes
 
-If your current schema differs, create a prisma/migrations/####_align_to_agents/ with non-destructive alters first. Back up data.
+No Prisma migrations. When altering schemas, write idempotent Mongoose migration scripts and back up production data before running them.
 
 5) Game Mechanics
 Object spawn rules

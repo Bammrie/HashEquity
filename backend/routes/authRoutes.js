@@ -2,7 +2,10 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const { ethers } = require("ethers");
 
+
 const prisma = require("../prisma/client");
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const JWT_SECRET = process.env.JWT_SECRET;
 

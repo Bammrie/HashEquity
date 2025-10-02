@@ -8,6 +8,15 @@ const decimalToNumber = (value) => {
 
 const normalizeWallet = (wallet = "") => wallet.trim().toLowerCase();
 
+const toNumber = (value) => {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
 const humanizeObjectId = (objectId = "") =>
   objectId
     .replace(/[-_]+/g, " ")
@@ -29,7 +38,7 @@ exports.getStats = async (_req, res) => {
       objectId: stat.objectId,
       name: stat.name || humanizeObjectId(stat.objectId),
       image: stat.image || "",
-      destroyed: stat.destroyed || 0
+      destroyed: toNumber(stat.destroyed)
     }));
 
     res.json(formatted);
@@ -51,6 +60,7 @@ exports.getBalances = async (req, res) => {
     });
 
     res.json({
+
       hashBalance: decimalToNumber(user?.hashBalance),
       unmintedHash: decimalToNumber(user?.unmintedHash)
     });
@@ -114,6 +124,7 @@ exports.destroyObject = async (req, res) => {
     res.json({
       hashBalance: decimalToNumber(user?.hashBalance),
       unmintedHash: decimalToNumber(user?.unmintedHash)
+
     });
   } catch (err) {
     console.error("Destroy error:", err);
