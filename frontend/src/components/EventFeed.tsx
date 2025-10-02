@@ -6,7 +6,7 @@ export const EventFeed = () => {
 
   return (
     <section className={styles.feed}>
-      <h2>Live Event Feed</h2>
+      <h2>Telemetry</h2>
       <ul>
         {events.map((event) => (
           <li key={event.id}>
