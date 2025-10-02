@@ -14,14 +14,24 @@ app.use("/api/game", gameRoutes);
 
 const PORT = process.env.PORT || 8080;
 
-const MONGO_URI = process.env.MONGO_URI;
+const mongoUri = process.env.MONGO_URI || process.env.DATABASE_URL;
 
-if (!MONGO_URI) {
-  throw new Error("MONGO_URI is not set. Please configure it in the environment.");
+if (!mongoUri) {
+  console.error(
+    "❌ MongoDB connection string missing. Set MONGO_URI in Railway (or map DATABASE_URL to the same Mongo URI)."
+  );
+  process.exit(1);
+}
+
+if (/^postgres(?:ql)?:\/\//i.test(mongoUri)) {
+  console.error(
+    "❌ Detected a Postgres connection string, but the backend now uses MongoDB. Please provide a Mongo URI via MONGO_URI."
+  );
+  process.exit(1);
 }
 
 mongoose
-  .connect(MONGO_URI)
+  .connect(mongoUri)
   .then(() => {
     console.log("✅ MongoDB connected");
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
