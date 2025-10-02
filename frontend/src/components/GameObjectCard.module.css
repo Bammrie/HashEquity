@@ -1,177 +1,112 @@
-.card {
-  position: relative;
+.coin {
+  position: absolute;
+  border: none;
+  background: none;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
-  width: 100%;
-  padding: 1rem 1.2rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(152, 132, 255, 0.25);
-  background: linear-gradient(160deg, rgba(57, 41, 124, 0.85), rgba(20, 16, 60, 0.92));
-  box-shadow: 0 20px 40px rgba(31, 20, 82, 0.25);
-  color: var(--text-primary, #f5f8ff);
+  align-items: center;
+  gap: 0.45rem;
+  transform: translate(-50%, -50%);
   cursor: pointer;
-  text-align: left;
-  text-transform: capitalize;
-  overflow: hidden;
-  transform: translateY(0);
+  color: var(--text-primary, #f5f8ff);
+  text-shadow: 0 4px 18px rgba(6, 6, 20, 0.5);
+  animation-name: coinFloat;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  filter: drop-shadow(0 18px 28px rgba(9, 6, 26, 0.45));
   transition:
     transform 0.35s ease,
-    box-shadow 0.35s ease,
-    border-color 0.35s ease;
-}
-
-.card::before,
-.card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  pointer-events: none;
-}
-
-.card::before {
-  background: radial-gradient(circle at 20% 20%, rgba(187, 141, 255, 0.38), transparent 55%);
-  filter: blur(0.8px);
-}
-
-.card::after {
-  background: radial-gradient(circle at 80% 80%, rgba(111, 226, 255, 0.4), transparent 60%);
-  mix-blend-mode: screen;
-}
-
-.card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(187, 141, 255, 0.55);
-  box-shadow: 0 28px 54px rgba(62, 36, 160, 0.45);
-}
-
-.card:hover::before,
-.card:hover::after {
-  opacity: 1;
-}
-
-.card:focus-visible {
-  outline: 2px solid rgba(166, 132, 255, 0.65);
-  outline-offset: 3px;
-}
-
-.cardContent {
-  position: relative;
+    filter 0.35s ease;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  width: 100%;
 }
 
-.sparkles {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+.coin:hover,
+.coin:focus-visible {
+  animation-play-state: paused;
+  transform: translate(-50%, -52%) scale(1.05);
+  filter: drop-shadow(0 26px 36px rgba(32, 18, 82, 0.55));
 }
 
-.label {
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: 0.03em;
-}
-
-.reward {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: rgba(213, 235, 255, 0.78);
-}
-
-.meta {
-  font-size: 0.78rem;
-  color: rgba(199, 206, 255, 0.58);
-}
-
-.cardFloating {
-  animation: collectibleFloat 4.8s ease-in-out infinite;
-}
-
-.cardFloating:hover {
+.coin:active {
+  transform: translate(-50%, -48%) scale(0.96);
   animation-play-state: paused;
 }
 
-.cardGlint {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    conic-gradient(from 120deg at 50% 50%, rgba(255, 255, 255, 0.18), transparent 30%, rgba(111, 226, 255, 0.12) 60%, transparent 80%);
-  opacity: 0;
-  transform: rotate(0deg) scale(1.1);
-  transition:
-    opacity 0.5s ease,
-    transform 1.4s ease;
-  mix-blend-mode: screen;
-  pointer-events: none;
-  z-index: 0;
+.coin:focus-visible {
+  outline: 2px solid rgba(166, 132, 255, 0.85);
+  outline-offset: 6px;
 }
 
-.card:hover .cardGlint {
-  opacity: 0.65;
-  transform: rotate(12deg) scale(1.18);
+.small {
+  width: min(24vw, 120px);
 }
 
-.sparkles .sparkle {
-  position: absolute;
-  width: 12px;
-  height: 12px;
+.medium {
+  width: min(26vw, 150px);
+}
+
+.large {
+  width: min(32vw, 180px);
+}
+
+.art {
+  width: 100%;
+  height: auto;
+  display: block;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));
-  opacity: 0;
-  animation: sparkle 6s linear infinite;
-  pointer-events: none;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.6), transparent 60%);
 }
 
-.sparkles .sparkle:nth-child(1) {
-  top: 14%;
-  left: 78%;
-  animation-delay: 0.4s;
+.hud {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.35rem 0.85rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(10, 12, 40, 0.78);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px rgba(8, 6, 32, 0.55);
+  text-align: center;
 }
 
-.sparkles .sparkle:nth-child(2) {
-  bottom: 18%;
-  right: 22%;
-  animation-delay: 1.7s;
+.name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
-.sparkles .sparkle:nth-child(3) {
-  top: 36%;
-  right: 8%;
-  animation-delay: 3s;
+.reward {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgba(199, 235, 255, 0.88);
 }
 
-@keyframes collectibleFloat {
+.health {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(188, 198, 255, 0.65);
+}
+
+@keyframes coinFloat {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translate(-50%, -50%) translateY(0);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translate(-50%, calc(-50% - 18px));
   }
 }
 
-@keyframes sparkle {
-  0%,
-  100% {
-    opacity: 0;
-    transform: scale(0.4) translate3d(0, 0, 0);
+@media (prefers-reduced-motion: reduce) {
+  .coin {
+    animation: none;
   }
-  40% {
-    opacity: 1;
-    transform: scale(1) translate3d(-4px, -6px, 0);
-  }
-  60% {
-    opacity: 0.6;
-    transform: scale(0.7) translate3d(6px, 4px, 0);
+
+  .coin:hover,
+  .coin:focus-visible {
+    transform: translate(-50%, -50%) scale(1.05);
   }
 }

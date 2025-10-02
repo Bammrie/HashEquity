@@ -1,4 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
+import clsx from 'clsx';
+import type { CSSProperties } from 'react';
 import { useAccount } from 'wagmi';
 import { ActiveObject, useGameStore } from '../state/gameStore';
 import { destroyGameObject, type BalancesResponse, type DestroyPayload } from '../services/gameApi';
@@ -35,33 +37,50 @@ export const GameObjectCard = ({ object }: Props) => {
     },
   });
 
+  const style: CSSProperties = {
+    left: `${object.position.x}%`,
+    top: `${object.position.y}%`,
+    animationDuration: `${object.floatDuration}s`,
+    animationDelay: `${object.floatDelay}s`,
+  };
+
+  const handleDestroy = () => {
+    const outcome = destroyObject(object.id);
+    if (outcome !== 'destroyed') {
+      return;
+    }
+    if (address) {
+      mutate({
+        wallet: address,
+        objectId: object.type,
+        reward: object.reward.type === 'unminted_hash' ? object.reward.value : undefined,
+        objectName: object.name,
+        objectImage: object.image,
+      });
+    }
+  };
+
+  const actionLabel =
+    object.reward.type === 'unminted_hash'
+      ? `Collect ${object.reward.value.toFixed(10)} unminted HASH from ${object.name}`
+      : `Trigger ${object.reward.label} from ${object.name}`;
+
   return (
     <button
-      className={`${styles.card} ${styles.cardFloating}`}
-      onClick={() => {
-        destroyObject(object.id);
-        if (address) {
-          mutate({
-            wallet: address,
-            objectId: object.id,
-            reward: object.reward.type === 'unminted_hash' ? object.reward.value : undefined,
-            objectName: object.type,
-          });
-        }
-      }}
+      className={clsx(styles.coin, styles[object.size])}
+      onClick={handleDestroy}
+      style={style}
       type="button"
+      aria-label={actionLabel}
     >
-      <span className={styles.cardGlint} aria-hidden="true" />
-      <span className={styles.cardContent}>
-        <span className={styles.label}>{object.type}</span>
+      <img src={object.image} alt="" className={styles.art} />
+      <div className={styles.hud}>
+        <span className={styles.name}>{object.name}</span>
         <span className={styles.reward}>{rewardLabel(object)}</span>
-        <span className={styles.meta}>Health: {object.health}</span>
-      </span>
-      <span className={styles.sparkles} aria-hidden="true">
-        <span className={styles.sparkle} />
-        <span className={styles.sparkle} />
-        <span className={styles.sparkle} />
-      </span>
+        <span className={styles.health}>
+          {object.health > 1 ? `${object.health} health` : 'Tap to collect'}
+        </span>
+      </div>
     </button>
   );
 };

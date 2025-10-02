@@ -1,0 +1,20 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="prism-spark-glow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#EAFBFF" />
+      <stop offset="45%" stop-color="#62E6FF" />
+      <stop offset="100%" stop-color="#0C84B6" />
+    </radialGradient>
+    <linearGradient id="prism-spark-ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#A9F2FF" />
+      <stop offset="100%" stop-color="#0A6B98" />
+    </linearGradient>
+  </defs>
+  <circle cx="90" cy="90" r="82" fill="url(#prism-spark-ring)" opacity="0.92" />
+  <circle cx="90" cy="90" r="66" fill="url(#prism-spark-glow)" />
+  <path d="M90 34L138 90L90 146L42 90L90 34Z" fill="#072944" opacity="0.55" />
+  <path d="M90 52L120 90L90 128L60 90L90 52Z" fill="#6AF1FF" opacity="0.45" />
+  <path d="M90 64L110 90L90 116L70 90L90 64Z" fill="#1B8DD4" />
+  <circle cx="90" cy="90" r="18" fill="#B9F6FF" opacity="0.8" />
+  <circle cx="90" cy="90" r="8" fill="#F4FEFF" />
+</svg>

@@ -1,64 +1,64 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import type { SpawnDefinition } from './gameTypes';
+import { spawnDefinitions } from './spawnDefinitions';
 
-type RewardDefinition =
-  | {
-      type: 'unminted_hash';
-      value: number;
-    }
-  | {
-      type: 'mini_game';
-      label: string;
-    };
-
-export type GameObjectType =
-  | 'circle'
-  | 'triangle'
-  | 'hexagon'
-  | 'prism'
-  | 'cube'
-  | 'diamond'
-  | 'wheel'
-  | 'slot'
-  | 'plinko'
-  | 'vault';
-
-export type SpawnDefinition = {
-  type: GameObjectType;
-  spawnChance: number;
-  reward: RewardDefinition;
+type ObjectPosition = {
+  x: number;
+  y: number;
 };
 
-export type ActiveObject = SpawnDefinition & { id: string; health: number };
-
-const spawnTable: SpawnDefinition[] = [
-  { type: 'circle', spawnChance: 0.18, reward: { type: 'unminted_hash', value: 0.00000001 } },
-  { type: 'triangle', spawnChance: 0.12, reward: { type: 'unminted_hash', value: 0.000000014 } },
-  { type: 'hexagon', spawnChance: 0.1, reward: { type: 'unminted_hash', value: 0.000000018 } },
-  { type: 'prism', spawnChance: 0.08, reward: { type: 'unminted_hash', value: 0.00000002 } },
-  { type: 'cube', spawnChance: 0.07, reward: { type: 'unminted_hash', value: 0.000000024 } },
-  { type: 'diamond', spawnChance: 0.1, reward: { type: 'unminted_hash', value: 0.00000003 } },
-  { type: 'wheel', spawnChance: 0.12, reward: { type: 'mini_game', label: 'Wheel Spin' } },
-  { type: 'slot', spawnChance: 0.08, reward: { type: 'mini_game', label: 'Slot Rush' } },
-  { type: 'plinko', spawnChance: 0.08, reward: { type: 'mini_game', label: 'Plinko Drop' } },
-  { type: 'vault', spawnChance: 0.07, reward: { type: 'unminted_hash', value: 0.00000005 } },
-];
+export type ActiveObject = SpawnDefinition & {
+  id: string;
+  position: ObjectPosition;
+  floatDuration: number;
+  floatDelay: number;
+};
 
 let nextObjectId = 1;
 let nextMiniGameIndex = 0;
 
 const miniGameRewardSequence = [0.00000002, 0.000000035, 0.00000005, 0.0000001];
 
-let spawnCursor = 0;
+const positionPadding: Record<SpawnDefinition['size'], number> = {
+  small: 12,
+  medium: 16,
+  large: 20,
+};
+
+const pickSpawnDefinition = (): SpawnDefinition => {
+  const roll = Math.random();
+  let cumulative = 0;
+  for (const definition of spawnDefinitions) {
+    cumulative += definition.spawnChance;
+    if (roll <= cumulative) {
+      return definition;
+    }
+  }
+  return spawnDefinitions[spawnDefinitions.length - 1];
+};
+
+const randomPosition = (size: SpawnDefinition['size']): ObjectPosition => {
+  const padding = positionPadding[size];
+  const min = padding;
+  const max = 100 - padding;
+  const x = Number((min + Math.random() * (max - min)).toFixed(2));
+  const y = Number((min + Math.random() * (max - min)).toFixed(2));
+  return { x, y };
+};
+
+const randomFloatDuration = () => Number((6 + Math.random() * 4).toFixed(2));
+const randomFloatDelay = () => Number((Math.random() * 6).toFixed(2));
 
 const createObject = (): ActiveObject => {
-  const definition = spawnTable[spawnCursor % spawnTable.length];
-  spawnCursor += 1;
+  const definition = pickSpawnDefinition();
   const id = `object-${nextObjectId++}`;
   return {
     ...definition,
     id,
-    health: definition.type === 'vault' ? 3 : 1,
+    position: randomPosition(definition.size),
+    floatDuration: randomFloatDuration(),
+    floatDelay: randomFloatDelay(),
   };
 };
 
@@ -83,12 +83,14 @@ type EventEntry = {
   message: string;
 };
 
+type DestroyOutcome = 'missing' | 'damaged' | 'destroyed';
+
 type GameState = {
   objects: ActiveObject[];
   balances: EconomyBalances;
   events: EventEntry[];
   miniGame: MiniGameState | null;
-  destroyObject: (id: string) => void;
+  destroyObject: (id: string) => DestroyOutcome;
   resolveMiniGame: () => void;
   settleDailyMint: () => void;
   tradeInForHash: (amount: number) => void;
@@ -116,10 +118,26 @@ export const useGameStore = create<GameState>()(
     events: [],
     miniGame: null,
     destroyObject: (id) => {
+      let outcome: DestroyOutcome = 'missing';
       set((state) => {
         const target = state.objects.find((obj) => obj.id === id);
         if (!target) {
           return state;
+        }
+
+        if (target.health > 1) {
+          const updatedTarget: ActiveObject = { ...target, health: target.health - 1 };
+          const updatedObjects = state.objects.map((obj) => (obj.id === id ? updatedTarget : obj));
+          const events = pushEvent(
+            state.events,
+            `${target.name} weakened. ${updatedTarget.health} health remaining.`,
+          );
+          outcome = 'damaged';
+          return {
+            ...state,
+            objects: updatedObjects,
+            events,
+          };
         }
 
         const remaining = state.objects.filter((obj) => obj.id !== id);
@@ -130,7 +148,10 @@ export const useGameStore = create<GameState>()(
 
         if (target.reward.type === 'unminted_hash') {
           balances.unminted = Number((balances.unminted + target.reward.value).toFixed(10));
-          events = pushEvent(events, `Destroyed ${target.type} for ${target.reward.value.toFixed(10)} unminted HASH.`);
+          events = pushEvent(
+            events,
+            `Destroyed ${target.name} for ${target.reward.value.toFixed(10)} unminted HASH.`,
+          );
         } else {
           const payout = miniGameRewardSequence[nextMiniGameIndex % miniGameRewardSequence.length];
           nextMiniGameIndex += 1;
@@ -142,6 +163,7 @@ export const useGameStore = create<GameState>()(
           events = pushEvent(events, `${target.reward.label} ready! Resolve to claim ${payout.toFixed(10)} HASH.`);
         }
 
+        outcome = 'destroyed';
         return {
           ...state,
           objects: respawned,
@@ -150,6 +172,7 @@ export const useGameStore = create<GameState>()(
           events,
         };
       }, false, 'destroyObject');
+      return outcome;
     },
     resolveMiniGame: () => {
       const { miniGame } = get();
@@ -160,7 +183,10 @@ export const useGameStore = create<GameState>()(
       set((state) => {
         const balances = { ...state.balances };
         balances.unminted = Number((balances.unminted + miniGame.payout).toFixed(10));
-        const events = pushEvent(state.events, `${miniGame.label} resolved for ${miniGame.payout.toFixed(10)} unminted HASH.`);
+        const events = pushEvent(
+          state.events,
+          `${miniGame.label} resolved for ${miniGame.payout.toFixed(10)} unminted HASH.`,
+        );
         return {
           ...state,
           balances,
@@ -181,7 +207,10 @@ export const useGameStore = create<GameState>()(
           unminted: 0,
           vault: Number((state.balances.vault + vaultTax).toFixed(10)),
         };
-        const events = pushEvent(state.events, `Daily mint settled. Vault collected ${vaultTax.toFixed(10)} HASH.`);
+        const events = pushEvent(
+          state.events,
+          `Daily mint settled. Vault collected ${vaultTax.toFixed(10)} HASH.`,
+        );
         return {
           ...state,
           balances,
@@ -200,7 +229,10 @@ export const useGameStore = create<GameState>()(
           unminted: Number((state.balances.unminted - amount).toFixed(10)),
           vault: state.balances.vault,
         };
-        const events = pushEvent(state.events, `Traded ${amount.toFixed(10)} unminted for ${minted.toFixed(10)} HASH.`);
+        const events = pushEvent(
+          state.events,
+          `Traded ${amount.toFixed(10)} unminted for ${minted.toFixed(10)} HASH.`,
+        );
         return {
           ...state,
           balances,
@@ -235,4 +267,4 @@ export const useGameStore = create<GameState>()(
   }))
 );
 
-export const spawnTableSpec = spawnTable;
+export const spawnTableSpec = spawnDefinitions;
