@@ -33,12 +33,6 @@
   color: rgba(245, 248, 255, 0.6);
 }
 
-.noticeWarning {
-  margin: 0;
-  font-size: 0.85rem;
-  color: rgba(255, 196, 132, 0.85);
-}
-
 .actions {
   display: flex;
   flex-direction: column;

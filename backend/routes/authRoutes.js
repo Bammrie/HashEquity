@@ -40,7 +40,7 @@ router.post("/wallet-login", async (req, res) => {
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    const token = jwt.sign({ id: user.id, isAdmin: adminStatus }, JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, isAdmin: user.isAdmin }, JWT_SECRET, {
       expiresIn: "1d"
     });
 
@@ -48,7 +48,7 @@ router.post("/wallet-login", async (req, res) => {
       message: "Wallet login successful",
       token,
       walletAddress: normalizedWallet,
-      isAdmin: adminStatus
+      isAdmin: user.isAdmin
     });
   } catch (err) {
     console.error("Wallet login error:", err);
