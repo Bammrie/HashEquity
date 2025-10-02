@@ -1,10 +1,5 @@
-const prisma = require("../prisma/client");
-
-const decimalToNumber = (value) => {
-  if (!value) return 0;
-  if (typeof value === "number") return value;
-  return Number(value.toString());
-};
+const Stats = require("../models/Stats");
+const User = require("../models/User");
 
 const normalizeWallet = (wallet = "") => wallet.trim().toLowerCase();
 
@@ -27,12 +22,7 @@ const humanizeObjectId = (objectId = "") =>
 
 exports.getStats = async (_req, res) => {
   try {
-    const stats = await prisma.objectStat.findMany({
-      orderBy: [
-        { destroyed: "desc" },
-        { objectId: "asc" }
-      ]
-    });
+    const stats = await Stats.find().sort({ destroyed: -1, objectId: 1 });
 
     const formatted = stats.map((stat) => ({
       objectId: stat.objectId,
@@ -55,14 +45,11 @@ exports.getBalances = async (req, res) => {
       return res.status(400).json({ error: "Missing wallet query parameter" });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { walletAddress: wallet }
-    });
+    const user = await User.findOne({ walletAddress: wallet });
 
     res.json({
-
-      hashBalance: decimalToNumber(user?.hashBalance),
-      unmintedHash: decimalToNumber(user?.unmintedHash)
+      hashBalance: toNumber(user?.hashBalance),
+      unmintedHash: toNumber(user?.unmintedHash)
     });
   } catch (err) {
     console.error("Balance fetch error:", err);
@@ -80,51 +67,43 @@ exports.destroyObject = async (req, res) => {
 
     const normalizedWallet = normalizeWallet(wallet);
 
-    let user = await prisma.user.findUnique({
-      where: { walletAddress: normalizedWallet }
-    });
+    const numericReward = toNumber(reward);
 
-    const numericReward = Number(reward) || 0;
+    const userUpdate = {
+      $setOnInsert: { walletAddress: normalizedWallet }
+    };
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          walletAddress: normalizedWallet,
-          unmintedHash: numericReward
-        }
-      });
-    } else if (numericReward !== 0) {
-      user = await prisma.user.update({
-        where: { walletAddress: normalizedWallet },
-        data: {
-          unmintedHash: {
-            increment: numericReward
-          }
-        }
-      });
+    if (numericReward !== 0) {
+      userUpdate.$inc = { unmintedHash: numericReward };
     }
+
+    const user = await User.findOneAndUpdate(
+      { walletAddress: normalizedWallet },
+      userUpdate,
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
 
     const statUpdates = {};
     if (objectName) statUpdates.name = objectName;
     if (objectImage) statUpdates.image = objectImage;
 
-    await prisma.objectStat.upsert({
-      where: { objectId },
-      update: {
-        destroyed: { increment: 1 },
-        ...statUpdates
-      },
-      create: {
-        objectId,
-        destroyed: 1,
-        ...statUpdates
-      }
+    const statsUpdate = {
+      $inc: { destroyed: 1 },
+      $setOnInsert: { objectId }
+    };
+
+    if (Object.keys(statUpdates).length) {
+      statsUpdate.$set = statUpdates;
+    }
+
+    await Stats.findOneAndUpdate({ objectId }, statsUpdate, {
+      new: true,
+      upsert: true
     });
 
     res.json({
-      hashBalance: decimalToNumber(user?.hashBalance),
-      unmintedHash: decimalToNumber(user?.unmintedHash)
-
+      hashBalance: toNumber(user?.hashBalance),
+      unmintedHash: toNumber(user?.unmintedHash)
     });
   } catch (err) {
     console.error("Destroy error:", err);
