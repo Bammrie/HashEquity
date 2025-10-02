@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { ethers } = require("ethers");
 
 const User = require("../models/User");
+const { isAdminWallet, normalizeWallet } = require("../config/admin");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -27,22 +28,27 @@ router.post("/wallet-login", async (req, res) => {
       return res.status(400).json({ error: "Invalid signature" });
     }
 
-    const normalizedWallet = walletAddress.trim().toLowerCase();
+    const normalizedWallet = normalizeWallet(walletAddress);
+    const adminStatus = isAdminWallet(normalizedWallet);
 
     const user = await User.findOneAndUpdate(
       { walletAddress: normalizedWallet },
-      { $setOnInsert: { walletAddress: normalizedWallet } },
+      {
+        $setOnInsert: { walletAddress: normalizedWallet },
+        $set: { isAdmin: adminStatus },
+      },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, isAdmin: user.isAdmin }, JWT_SECRET, {
       expiresIn: "1d"
     });
 
     res.json({
       message: "Wallet login successful",
       token,
-      walletAddress: normalizedWallet
+      walletAddress: normalizedWallet,
+      isAdmin: user.isAdmin
     });
   } catch (err) {
     console.error("Wallet login error:", err);
