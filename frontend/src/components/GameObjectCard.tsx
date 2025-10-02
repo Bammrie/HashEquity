@@ -1,21 +1,17 @@
 import { useMutation } from '@tanstack/react-query';
+import type { CSSProperties } from 'react';
 import { useAccount } from 'wagmi';
 import { ActiveObject, useGameStore } from '../state/gameStore';
 import { destroyGameObject, type BalancesResponse, type DestroyPayload } from '../services/gameApi';
 import styles from './GameObjectCard.module.css';
 
-const rewardLabel = (object: ActiveObject): string => {
-  if (object.reward.type === 'unminted_hash') {
-    return `${object.reward.value.toFixed(10)} unminted HASH`;
-  }
-  return object.reward.label;
-};
-
 type Props = {
   object: ActiveObject;
+  position: { x: number; y: number };
+  size: number;
 };
 
-export const GameObjectCard = ({ object }: Props) => {
+export const GameObjectCard = ({ object, position, size }: Props) => {
   const { address } = useAccount();
   const destroyObject = useGameStore((state) => state.destroyObject);
   const syncBackendBalances = useGameStore((state) => state.syncBackendBalances);
@@ -35,33 +31,41 @@ export const GameObjectCard = ({ object }: Props) => {
     },
   });
 
+  const handleDestroy = () => {
+    destroyObject(object.id);
+    if (address) {
+      mutate({
+        wallet: address,
+        objectId: object.id,
+        reward: object.reward.type === 'unminted_hash' ? object.reward.value : undefined,
+        objectName: object.definitionKey,
+      });
+    }
+  };
+
+  const style: CSSProperties = {
+    width: `${size}px`,
+    height: `${size}px`,
+    transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+  };
+
   return (
     <button
-      className={`${styles.card} ${styles.cardFloating}`}
-      onClick={() => {
-        destroyObject(object.id);
-        if (address) {
-          mutate({
-            wallet: address,
-            objectId: object.id,
-            reward: object.reward.type === 'unminted_hash' ? object.reward.value : undefined,
-            objectName: object.type,
-          });
-        }
-      }}
+
+      className={styles.objectButton}
+      onClick={handleDestroy}
+      style={style}
+
+
       type="button"
+      aria-label={`Interact with ${object.definitionKey}`}
     >
-      <span className={styles.cardGlint} aria-hidden="true" />
-      <span className={styles.cardContent}>
-        <span className={styles.label}>{object.type}</span>
-        <span className={styles.reward}>{rewardLabel(object)}</span>
-        <span className={styles.meta}>Health: {object.health}</span>
+
+      <span className={styles.imageWrapper} aria-hidden="true">
+        <img src={object.image} alt="" className={styles.image} />
       </span>
-      <span className={styles.sparkles} aria-hidden="true">
-        <span className={styles.sparkle} />
-        <span className={styles.sparkle} />
-        <span className={styles.sparkle} />
-      </span>
+      <span className={styles.srOnly}>Health {object.health}</span>
+
     </button>
   );
 };

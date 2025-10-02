@@ -2,7 +2,10 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const { ethers } = require("ethers");
 
-const User = require("../models/User");
+
+const prisma = require("../prisma/client");
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -29,11 +32,15 @@ router.post("/wallet-login", async (req, res) => {
 
     const normalizedWallet = walletAddress.trim().toLowerCase();
 
-    const user = await User.findOneAndUpdate(
-      { walletAddress: normalizedWallet },
-      { $setOnInsert: { walletAddress: normalizedWallet } },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    );
+    let user = await prisma.user.findUnique({
+      where: { walletAddress: normalizedWallet }
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: { walletAddress: normalizedWallet }
+      });
+    }
 
     const token = jwt.sign({ id: user.id }, JWT_SECRET, {
       expiresIn: "1d"
