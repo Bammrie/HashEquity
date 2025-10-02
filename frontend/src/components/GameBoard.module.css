@@ -1,6 +1,70 @@
 .board {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
+  min-height: 520px;
+  padding: 2rem;
+  border-radius: 28px;
+  border: 1px solid rgba(128, 112, 255, 0.25);
+  background:
+    radial-gradient(circle at 18% 22%, rgba(120, 214, 255, 0.14), transparent 60%),
+    radial-gradient(circle at 82% 78%, rgba(255, 166, 253, 0.16), transparent 58%),
+    linear-gradient(135deg, rgba(16, 14, 42, 0.92), rgba(7, 6, 28, 0.94));
+  box-shadow: 0 34px 68px rgba(8, 4, 24, 0.55);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.board::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      120deg,
+      rgba(120, 110, 220, 0.15) 0%,
+      transparent 55%,
+      rgba(78, 204, 255, 0.12) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(210, 218, 255, 0.08) 0px,
+      rgba(210, 218, 255, 0.08) 1px,
+      transparent 1px,
+      transparent 32px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(210, 218, 255, 0.08) 0px,
+      rgba(210, 218, 255, 0.08) 1px,
+      transparent 1px,
+      transparent 32px
+    );
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (max-width: 768px) {
+  .board {
+    min-height: 460px;
+    padding: 1.4rem;
+  }
+}
+
+@media (max-width: 540px) {
+  .board {
+    min-height: 400px;
+  }
 }

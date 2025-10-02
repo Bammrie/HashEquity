@@ -1,0 +1,20 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="nova-gem-glow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#FFF0F3" />
+      <stop offset="40%" stop-color="#FF9BA8" />
+      <stop offset="100%" stop-color="#B32744" />
+    </radialGradient>
+    <linearGradient id="nova-gem-ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFC4CE" />
+      <stop offset="100%" stop-color="#6D1128" />
+    </linearGradient>
+  </defs>
+  <circle cx="90" cy="90" r="82" fill="url(#nova-gem-ring)" opacity="0.9" />
+  <circle cx="90" cy="90" r="64" fill="url(#nova-gem-glow)" />
+  <path d="M90 32L132 72L120 128L90 152L60 128L48 72L90 32Z" fill="#470717" opacity="0.55" />
+  <path d="M90 52L120 78L110 120L90 136L70 120L60 78L90 52Z" fill="#FFCED7" opacity="0.55" />
+  <path d="M90 70L108 86L102 112L90 122L78 112L72 86L90 70Z" fill="#F25D76" opacity="0.88" />
+  <path d="M90 82L102 92L99 108L90 116L81 108L78 92L90 82Z" fill="#FFE6EA" />
+  <circle cx="90" cy="100" r="10" fill="#FFFAFB" />
+</svg>

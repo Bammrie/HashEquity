@@ -1,0 +1,26 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="plinko-disc-glow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#ECFFF6" />
+      <stop offset="40%" stop-color="#5FF7B5" />
+      <stop offset="100%" stop-color="#15804D" />
+    </radialGradient>
+    <linearGradient id="plinko-disc-ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9BFAD4" />
+      <stop offset="100%" stop-color="#0B5C37" />
+    </linearGradient>
+  </defs>
+  <circle cx="90" cy="90" r="82" fill="url(#plinko-disc-ring)" opacity="0.92" />
+  <circle cx="90" cy="90" r="66" fill="url(#plinko-disc-glow)" />
+  <circle cx="90" cy="90" r="48" fill="#083624" opacity="0.55" />
+  <circle cx="90" cy="90" r="34" fill="#B3FDE1" opacity="0.7" />
+  <g opacity="0.9">
+    <circle cx="90" cy="66" r="6" fill="#0B6B41" />
+    <circle cx="112" cy="90" r="6" fill="#0B6B41" />
+    <circle cx="90" cy="114" r="6" fill="#0B6B41" />
+    <circle cx="68" cy="90" r="6" fill="#0B6B41" />
+    <circle cx="102" cy="78" r="6" fill="#0B6B41" />
+    <circle cx="78" cy="102" r="6" fill="#0B6B41" />
+  </g>
+  <circle cx="90" cy="90" r="14" fill="#EBFFF7" />
+</svg>
