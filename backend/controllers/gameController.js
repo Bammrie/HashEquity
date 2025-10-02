@@ -58,29 +58,36 @@ exports.destroyObject = async (req, res) => {
 
     const normalizedWallet = normalizeWallet(wallet);
 
-    let user = await User.findOne({ walletAddress: normalizedWallet });
-    if (!user) {
-      user = await User.create({ walletAddress: normalizedWallet });
-    }
-
     const numericReward = Number(reward) || 0;
+
+    const userUpdate = {
+      $setOnInsert: { walletAddress: normalizedWallet }
+    };
+
     if (numericReward !== 0) {
-      user.unmintedHash += numericReward;
-      await user.save();
+      userUpdate.$inc = { unmintedHash: numericReward };
     }
 
-    const update = {
+    const user = await User.findOneAndUpdate(
+      { walletAddress: normalizedWallet },
+      userUpdate,
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    const statUpdates = {};
+    if (objectName) statUpdates.name = objectName;
+    if (objectImage) statUpdates.image = objectImage;
+
+    const statsUpdate = {
       $inc: { destroyed: 1 },
       $setOnInsert: { objectId }
     };
 
-    if (objectName || objectImage) {
-      update.$set = {};
-      if (objectName) update.$set.name = objectName;
-      if (objectImage) update.$set.image = objectImage;
+    if (Object.keys(statUpdates).length) {
+      statsUpdate.$set = statUpdates;
     }
 
-    await Stats.findOneAndUpdate({ objectId }, update, {
+    await Stats.findOneAndUpdate({ objectId }, statsUpdate, {
       new: true,
       upsert: true
     });
