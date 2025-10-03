@@ -143,17 +143,12 @@ export const EconomyPanel = () => {
               value={tradeAmount}
               onChange={(event) => setTradeAmount(event.target.value)}
             />
-            <button
-              type="button"
-              className={styles.maxButton}
-              onClick={fillMaxTrade}
-              disabled={!address || isBusy}
-            >
+            <button type="button" className={styles.maxButton} onClick={fillMaxTrade}>
               Max
             </button>
           </div>
-          <button type="submit" disabled={!address || isBusy}>
-            {isTrading ? 'Trading…' : 'Convert 50%'}
+          <button type="submit" disabled={isFetching}>
+            Convert 50%
           </button>
         </form>
         {address && (

@@ -1,10 +1,11 @@
-const express = require('express');
+const express = require("express");
 
-const adminController = require('../controllers/adminController');
+const adminController = require("../controllers/adminController");
+const { authenticateAdmin } = require("../middleware/authenticateAdmin");
 
 const router = express.Router();
 
-router.get('/overview', adminController.getOverview);
-router.get('/overview/html', adminController.renderOverviewPage);
+router.get("/overview", authenticateAdmin, adminController.getOverview);
 
 module.exports = router;
+
