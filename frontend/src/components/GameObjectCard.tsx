@@ -6,13 +6,6 @@ import { ActiveObject, useGameStore } from '../state/gameStore';
 import { destroyGameObject, type BalancesResponse, type DestroyPayload } from '../services/gameApi';
 import styles from './GameObjectCard.module.css';
 
-const rewardLabel = (object: ActiveObject): string => {
-  if (object.reward.type === 'unminted_hash') {
-    return `${object.reward.value.toFixed(10)} unminted HASH`;
-  }
-  return object.reward.label;
-};
-
 type Props = {
   object: ActiveObject;
 };
@@ -74,13 +67,6 @@ export const GameObjectCard = ({ object }: Props) => {
       aria-label={actionLabel}
     >
       <img src={object.image} alt="" className={styles.art} />
-      <div className={styles.hud}>
-        <span className={styles.name}>{object.name}</span>
-        <span className={styles.reward}>{rewardLabel(object)}</span>
-        <span className={styles.health}>
-          {object.health > 1 ? `${object.health} health` : 'Tap to collect'}
-        </span>
-      </div>
     </button>
   );
 };
