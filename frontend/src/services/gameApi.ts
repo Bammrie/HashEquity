@@ -19,9 +19,41 @@ type DestroyPayload = {
   objectName?: string;
   objectImage?: string;
 };
+type MintResponse = BalancesResponse & {
+  mintedAmount: number;
+  vaultTax: number;
+};
 
-const trimmedBaseUrl = appEnv.backendUrl ? appEnv.backendUrl.replace(/\/$/, '') : '';
-const apiBase = `${trimmedBaseUrl}/api/game`;
+type TradePayload = {
+  wallet: string;
+  amount: number;
+};
+
+type TradeResponse = BalancesResponse & {
+  tradedAmount: number;
+  mintedAmount: number;
+};
+
+const trimTrailingSlash = (value: string) => value.replace(/\/$/, '');
+
+const explicitBackend = appEnv.backendUrl ? trimTrailingSlash(appEnv.backendUrl) : '';
+
+const fallbackBackend = (() => {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+
+  const { hostname, origin } = window.location;
+
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8080';
+  }
+
+  return origin;
+})();
+
+const backendBase = trimTrailingSlash(explicitBackend || fallbackBackend);
+const apiBase = backendBase ? `${backendBase}/api/game` : '/api/game';
 
 const createUrl = (path: string) => `${apiBase}${path}`;
 
@@ -51,10 +83,9 @@ export const fetchGameStats = async (): Promise<StatsEntry[]> => {
 };
 
 export const fetchBalances = async (wallet: string): Promise<BalancesResponse> => {
-  const url = new URL(createUrl('/balances'), window.location.origin);
-  url.searchParams.set('wallet', wallet);
+  const url = `${createUrl('/balances')}?wallet=${encodeURIComponent(wallet)}`;
 
-  const response = await fetch(url.toString(), {
+  const response = await fetch(url, {
     headers: {
       Accept: 'application/json',
     },
@@ -74,4 +105,35 @@ export const destroyGameObject = async (payload: DestroyPayload): Promise<Balanc
   return handleResponse<BalancesResponse>(response);
 };
 
-export type { StatsEntry, BalancesResponse, DestroyPayload };
+export const runDailyMint = async (wallet: string): Promise<MintResponse> => {
+  const response = await fetch(createUrl('/mint'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ wallet }),
+  });
+  return handleResponse<MintResponse>(response);
+};
+
+export const tradeUnmintedHash = async (payload: TradePayload): Promise<TradeResponse> => {
+  const response = await fetch(createUrl('/trade'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<TradeResponse>(response);
+};
+
+export type {
+  StatsEntry,
+  BalancesResponse,
+  DestroyPayload,
+  MintResponse,
+  TradePayload,
+  TradeResponse,
+};

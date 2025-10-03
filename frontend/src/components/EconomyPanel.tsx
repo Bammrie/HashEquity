@@ -1,8 +1,14 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 import { useGameStore } from '../state/gameStore';
-import { fetchBalances } from '../services/gameApi';
+import {
+  fetchBalances,
+  runDailyMint,
+  tradeUnmintedHash,
+  type MintResponse,
+  type TradeResponse,
+} from '../services/gameApi';
 import styles from './EconomyPanel.module.css';
 
 export const EconomyPanel = () => {
@@ -23,6 +29,35 @@ export const EconomyPanel = () => {
     queryFn: () => fetchBalances(address!),
     enabled: Boolean(address),
     refetchInterval: 30_000,
+  });
+
+  const { mutate: settleMintMutation, isPending: isMinting } = useMutation<MintResponse, Error>({
+    mutationFn: () => runDailyMint(address!),
+    onSuccess: (result) => {
+      syncBackendBalances({
+        hashBalance: result.hashBalance,
+        unmintedHash: result.unmintedHash,
+      });
+      settleDailyMint({ mintedAmount: result.mintedAmount, vaultTax: result.vaultTax });
+    },
+    onError: (mintError) => {
+      addEvent(`Failed to settle daily mint: ${mintError.message}`);
+    },
+  });
+
+  const { mutate: tradeMutation, isPending: isTrading } = useMutation<TradeResponse, Error, number>({
+    mutationFn: (amount) => tradeUnmintedHash({ wallet: address!, amount }),
+    onSuccess: (result) => {
+      syncBackendBalances({
+        hashBalance: result.hashBalance,
+        unmintedHash: result.unmintedHash,
+      });
+      tradeInForHash({ tradedAmount: result.tradedAmount, mintedAmount: result.mintedAmount });
+      setTradeAmount('0.00000000');
+    },
+    onError: (tradeError) => {
+      addEvent(`Failed to trade in: ${tradeError.message}`);
+    },
   });
 
   useEffect(() => {
@@ -46,8 +81,26 @@ export const EconomyPanel = () => {
     if (Number.isNaN(amount)) {
       return;
     }
-    tradeInForHash(Number(amount.toFixed(10)));
+    if (amount <= 0) {
+      addEvent('Enter an amount greater than zero to trade in.');
+      return;
+    }
+    if (!address) {
+      addEvent('Connect a wallet before trading in unminted HASH.');
+      return;
+    }
+    tradeMutation(Number(amount.toFixed(10)));
   };
+
+  const handleMintClick = () => {
+    if (!address) {
+      addEvent('Connect a wallet before running the daily mint.');
+      return;
+    }
+    settleMintMutation();
+  };
+
+  const isBusy = isFetching || isMinting || isTrading;
 
   return (
     <section className={styles.panel}>
@@ -75,8 +128,8 @@ export const EconomyPanel = () => {
         </div>
       </dl>
       <div className={styles.actions}>
-        <button type="button" onClick={settleDailyMint} disabled={isFetching}>
-          {isFetching ? 'Syncing...' : 'Run Daily Mint'}
+        <button type="button" onClick={handleMintClick} disabled={!address || isBusy}>
+          {isMinting ? 'Minting...' : 'Run Daily Mint'}
         </button>
         <form onSubmit={handleTradeSubmit} className={styles.tradeForm}>
           <label htmlFor="trade-amount">Trade In</label>
@@ -99,8 +152,13 @@ export const EconomyPanel = () => {
           </button>
         </form>
         {address && (
-          <button type="button" onClick={() => refetch()} className={styles.refreshButton} disabled={isFetching}>
-            Refresh Balances
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className={styles.refreshButton}
+            disabled={isBusy}
+          >
+            {isFetching ? 'Syncing…' : 'Refresh Balances'}
           </button>
         )}
       </div>
