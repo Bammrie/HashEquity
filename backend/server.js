@@ -6,6 +6,7 @@ require('dotenv').config();
 const { connectToDatabase } = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const gameRoutes = require('./routes/gameRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 app.use(express.json());
@@ -47,6 +48,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
+app.use('/api/admin', adminRoutes);
 
 const PORT = process.env.PORT || 8080;
 

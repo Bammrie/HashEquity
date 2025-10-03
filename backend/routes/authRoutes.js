@@ -3,14 +3,15 @@ const jwt = require("jsonwebtoken");
 const { ethers } = require("ethers");
 
 const User = require("../models/User");
-
-const JWT_SECRET = process.env.JWT_SECRET;
+const { isAdminWallet, normalizeWallet } = require("../config/admin");
+const { getJwtSecret } = require("../config/env");
 
 const router = express.Router();
 
 router.post("/wallet-login", async (req, res) => {
   try {
-    if (!JWT_SECRET) {
+    const jwtSecret = getJwtSecret();
+    if (!jwtSecret) {
       return res.status(500).json({ error: "JWT secret not configured" });
     }
 
@@ -27,22 +28,27 @@ router.post("/wallet-login", async (req, res) => {
       return res.status(400).json({ error: "Invalid signature" });
     }
 
-    const normalizedWallet = walletAddress.trim().toLowerCase();
+    const normalizedWallet = normalizeWallet(walletAddress);
+    const adminStatus = isAdminWallet(normalizedWallet);
 
     const user = await User.findOneAndUpdate(
       { walletAddress: normalizedWallet },
-      { $setOnInsert: { walletAddress: normalizedWallet } },
+      {
+        $setOnInsert: { walletAddress: normalizedWallet },
+        $set: { isAdmin: adminStatus },
+      },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, isAdmin: adminStatus }, jwtSecret, {
       expiresIn: "1d"
     });
 
     res.json({
       message: "Wallet login successful",
       token,
-      walletAddress: normalizedWallet
+      walletAddress: normalizedWallet,
+      isAdmin: adminStatus
     });
   } catch (err) {
     console.error("Wallet login error:", err);
