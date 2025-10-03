@@ -4,8 +4,8 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const { connectToDatabase } = require('./config/database');
-const authRoutes = require('./routes/authRoutes');
 const gameRoutes = require('./routes/gameRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 app.use(express.json());
@@ -45,8 +45,8 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
+app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 8080;
 

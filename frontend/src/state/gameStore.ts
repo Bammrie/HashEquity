@@ -92,8 +92,8 @@ type GameState = {
   miniGame: MiniGameState | null;
   destroyObject: (id: string) => DestroyOutcome;
   resolveMiniGame: () => void;
-  settleDailyMint: () => void;
-  tradeInForHash: (amount: number) => void;
+  settleDailyMint: (result: { mintedAmount: number; vaultTax: number }) => void;
+  tradeInForHash: (result: { tradedAmount: number; mintedAmount: number }) => void;
   syncBackendBalances: (payload: { hashBalance: number | string; unmintedHash: number | string }) => void;
   addEvent: (message: string) => void;
 };
@@ -195,47 +195,30 @@ export const useGameStore = create<GameState>()(
         };
       }, false, 'resolveMiniGame');
     },
-    settleDailyMint: () => {
+    settleDailyMint: ({ mintedAmount, vaultTax }) => {
       set((state) => {
-        if (state.balances.unminted <= 0) {
-          return state;
-        }
-        const mintedAmount = state.balances.unminted * 0.8;
-        const vaultTax = state.balances.unminted * 0.2;
-        const balances = {
-          hash: Number((state.balances.hash + mintedAmount).toFixed(10)),
-          unminted: 0,
-          vault: Number((state.balances.vault + vaultTax).toFixed(10)),
-        };
         const events = pushEvent(
           state.events,
-          `Daily mint settled. Vault collected ${vaultTax.toFixed(10)} HASH.`,
+          `Daily mint settled. Minted ${mintedAmount.toFixed(10)} HASH and sent ${vaultTax.toFixed(10)} HASH to the Vault.`,
         );
         return {
           ...state,
-          balances,
+          balances: {
+            ...state.balances,
+            vault: Number((state.balances.vault + vaultTax).toFixed(10)),
+          },
           events,
         };
       }, false, 'settleDailyMint');
     },
-    tradeInForHash: (amount) => {
+    tradeInForHash: ({ tradedAmount, mintedAmount }) => {
       set((state) => {
-        if (amount <= 0 || amount > state.balances.unminted) {
-          return state;
-        }
-        const minted = amount * 0.5;
-        const balances = {
-          hash: Number((state.balances.hash + minted).toFixed(10)),
-          unminted: Number((state.balances.unminted - amount).toFixed(10)),
-          vault: state.balances.vault,
-        };
         const events = pushEvent(
           state.events,
-          `Traded ${amount.toFixed(10)} unminted for ${minted.toFixed(10)} HASH.`,
+          `Traded ${tradedAmount.toFixed(10)} unminted for ${mintedAmount.toFixed(10)} HASH.`,
         );
         return {
           ...state,
-          balances,
           events,
         };
       }, false, 'tradeInForHash');

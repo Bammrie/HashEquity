@@ -10,7 +10,8 @@ const userSchema = new mongoose.Schema(
       trim: true
     },
     unmintedHash: { type: Number, default: 0 },
-    hashBalance: { type: Number, default: 0 }
+    hashBalance: { type: Number, default: 0 },
+    isAdmin: { type: Boolean, default: false }
   },
   { timestamps: true }
 );
