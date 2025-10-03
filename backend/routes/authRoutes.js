@@ -1,6 +1,6 @@
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const { ethers } = require("ethers");
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const { ethers } = require('ethers');
 
 const User = require("../models/User");
 const { isAdminWallet, normalizeWallet } = require("../config/admin");
@@ -8,25 +8,31 @@ const { isAdminWallet, normalizeWallet } = require("../config/admin");
 const JWT_SECRET = process.env.JWT_SECRET;
 
 const router = express.Router();
+const LOGIN_MESSAGE = 'Login to HashEquity';
 
-router.post("/wallet-login", async (req, res) => {
+router.post('/wallet-login', async (req, res) => {
   try {
     const jwtSecret = getJwtSecret();
     if (!jwtSecret) {
       return res.status(500).json({ error: "JWT secret not configured" });
     }
 
-    const { walletAddress, signature } = req.body;
+    const { walletAddress, signature } = req.body || {};
 
     if (!walletAddress || !signature) {
-      return res.status(400).json({ error: "Missing walletAddress or signature" });
+      return res.status(400).json({ error: 'Missing walletAddress or signature' });
     }
 
-    const message = "Login to HashEquity";
+    let recoveredAddress;
+    try {
+      recoveredAddress = ethers.verifyMessage(LOGIN_MESSAGE, signature);
+    } catch (verificationError) {
+      console.error('Wallet login verification error:', verificationError);
+      return res.status(400).json({ error: 'Invalid signature' });
+    }
 
-    const recoveredAddress = ethers.verifyMessage(message, signature);
     if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
-      return res.status(400).json({ error: "Invalid signature" });
+      return res.status(400).json({ error: 'Invalid signature' });
     }
 
     const normalizedWallet = normalizeWallet(walletAddress);
@@ -46,14 +52,14 @@ router.post("/wallet-login", async (req, res) => {
     });
 
     res.json({
-      message: "Wallet login successful",
+      message: 'Wallet login successful',
       token,
       walletAddress: normalizedWallet,
       isAdmin: user.isAdmin
     });
   } catch (err) {
-    console.error("Wallet login error:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error('Wallet login error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
