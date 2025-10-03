@@ -11,7 +11,8 @@ const router = express.Router();
 
 router.post("/wallet-login", async (req, res) => {
   try {
-    if (!JWT_SECRET) {
+    const jwtSecret = getJwtSecret();
+    if (!jwtSecret) {
       return res.status(500).json({ error: "JWT secret not configured" });
     }
 
