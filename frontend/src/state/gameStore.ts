@@ -92,6 +92,7 @@ type GameState = {
   miniGame: MiniGameState | null;
   destroyObject: (id: string) => DestroyOutcome;
   resolveMiniGame: () => void;
+  settleDailyMint: (result: { mintedAmount: number; vaultTax: number }) => void;
   tradeInForHash: (result: { tradedAmount: number; mintedAmount: number }) => void;
   syncBackendBalances: (payload: { hashBalance: number | string; unmintedHash: number | string }) => void;
   addEvent: (message: string) => void;
@@ -193,6 +194,22 @@ export const useGameStore = create<GameState>()(
           events,
         };
       }, false, 'resolveMiniGame');
+    },
+    settleDailyMint: ({ mintedAmount, vaultTax }) => {
+      set((state) => {
+        const events = pushEvent(
+          state.events,
+          `Daily mint settled. Minted ${mintedAmount.toFixed(10)} HASH and sent ${vaultTax.toFixed(10)} HASH to the Vault.`,
+        );
+        return {
+          ...state,
+          balances: {
+            ...state.balances,
+            vault: Number((state.balances.vault + vaultTax).toFixed(10)),
+          },
+          events,
+        };
+      }, false, 'settleDailyMint');
     },
     tradeInForHash: ({ tradedAmount, mintedAmount }) => {
       set((state) => {
