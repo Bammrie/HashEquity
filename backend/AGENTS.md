@@ -98,3 +98,39 @@ Admin wallet verification continues to exist for backend services and separate o
   - Add `console.error` or structured logging for all DB operations
   - Fail gracefully if MongoDB is unavailable
   - Insert test documents during deployment for verification
+ 
+ ## 🔗 On-Chain Token Integration: HASH
+
+### Purpose
+The backend is responsible for bridging in-game balances with the deployed HASH ERC-20 on Polygon. The game database remains the source of truth for player activity, while the ERC-20 supply reflects the aggregated daily mint.
+
+### Architecture
+- **Database (MongoDB):** Tracks `User.hashBalance` and `User.unmintedHash` for each wallet.
+- **Cron Job (`cron/dailyMint.js`):** Runs daily at 00:00 UTC.
+  1. Aggregate all `unmintedHash` from the database.
+  2. Call `mintHashTokens(totalUnminted)` via ethers.js.
+  3. Distribute:
+     - 80% credited to each player’s `hashBalance`.
+     - 20% allocated to `Vault` (tracked in DB + on-chain).
+  4. Reset all users’ `unmintedHash = 0`.
+
+### Files & Responsibilities
+- `abi/HashToken.json` → ERC-20 ABI for HASH token contract.
+- `services/blockchain.js` → Wraps ethers.js with provider, signer (from `VAULT_PRIVATE_KEY`), and contract instance.
+- `cron/dailyMint.js` → Schedules and executes the daily mint workflow.
+- `controllers/gameController.js` → Retains business logic for ad-hoc settlement (`/mint`, `/trade`).
+
+### Environment Variables
+- `HASH_TOKEN_ADDRESS` → deployed ERC-20 address.
+- `VAULT_ADDRESS` → Vault wallet address.
+- `VAULT_PRIVATE_KEY` → Vault signer key (DO NOT commit).
+- `RPC_URL` → Polygon RPC endpoint.
+- `MINT_CRON_SCHEDULE` → default `0 0 * * *`.
+
+### Agent Rules
+- Always pull `totalUnminted` from the DB before minting.
+- Do not hard-code contract addresses or keys—read from environment.
+- If ABI changes, update `abi/HashToken.json` and bump this spec.
+- Ensure cron job writes to logs: total minted, vault tax, DB update results.
+- Mint failures must not silently zero user balances; retry logic is required.
+
