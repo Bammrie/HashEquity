@@ -1,29 +1,100 @@
-# AGENTS.md
+.md
 
-## Scope
-These instructions apply to the entire backend repository and any files within it.
+## Project: HashEquity.com
+A Web3 game and token ecosystem powered by the HASH token on the Polygon (MATIC) network.
 
-## Mission-critical context
-- The frontend expects the backend to expose the following API routes under `/api`:
-  - `GET /game/stats` → returns an array of `{ image, name, destroyed }`.
-  - `GET /game/balances?wallet=<address>` → returns `{ hashBalance, unmintedHash }`.
-  - `POST /game/destroy` → accepts `{ wallet, objectId }` and returns the updated balances.
-- Preserve these routes, shapes, and HTTP status codes when making changes so the deployed frontend stays functional.
-- Keep CORS open for `https://www.hashequity.com` and any staging domains used by the frontend.
+---
 
-## Coding & review guidelines
-- Match the existing code style and formatter configuration (run the repo’s formatter/linter before committing).
-- Keep environment variables, secrets, and service URLs in configuration files or Railway variables—never hard-code credentials.
-- When touching business logic, add or update unit/integration tests that cover the new behavior.
+## 🚀 Overview
 
-## Testing expectations
-- Run `npm test` (or the equivalent script defined in `package.json`) before requesting review.
-- Call out any skipped or failing tests explicitly in the final message, with reasons and follow-up tasks if needed.
+**HashEquity** is a real-time, interactive Web3 game where users earn HASH tokens by destroying objects on screen. The game rewards players with *Unminted HASH*, which can be minted daily or traded for lower returns. The site includes a dynamic token economy, NFT reward system, a smart contract-driven admin vault (HashVault), and live global stats for transparency and competition. Operations tooling lives off the main site—players never see admin dashboards in production.
 
-## Git & PR conventions
-- Use conventional, descriptive commit messages.
-- In the final response, include:
-  - A summary of the changes.
-  - Test commands run (or explain why none were run).
-  - Any deployment considerations (migrations, config updates, etc.).
+---
 
+## 🎮 Core Game Loop
+
+- Players connect their Web3 wallets to log in.
+- Game shows **10 active clickable objects** at all times.
+- Clicking an object:
+  - Removes it
+  - Rewards Unminted HASH (based on the object's type)
+  - Spawns a new object
+- Some objects may trigger:
+  - Mini-games (slot machine, plinko, etc.)
+  - Random bonuses or penalties
+- Object logic is modular and expandable.
+
+---
+
+## 🪙 Tokenomics: HASH
+
+- **Token Chain**: Polygon (MATIC)
+- **Ticker**: HASH
+- **Circulating Supply at Launch**: 0
+- **Minting Authority**: One admin address (HashVault)
+- **Transaction Fees**: None on internal balances, gas fees apply on withdrawals
+
+### HASH Balance Types
+
+| Balance Type     | Description                                         |
+|------------------|-----------------------------------------------------|
+| `Unminted HASH`  | Earned by gameplay. Can be minted daily or traded. |
+| `HASH`           | Actual on-chain token. Withdrawable.                |
+
+### Minting Rules
+
+- Every day at **00:00 UTC**, a backend service:
+  - Sums all users' `Unminted HASH`
+  - Mints that total supply to the **HashVault address**
+  - Distributes 80% to users’ `HASH` balances
+  - Sends 20% to the HashVault's balance as a tax
+  - Resets all users' `Unminted HASH` to 0
+
+### Trade Feature
+
+- Users can trade their `Unminted HASH` for 50% of its value in `HASH`
+- Tokens come from the HashVault's `HASH` balance
+- Traded Unminted HASH gets added to the Vault's unminted balance
+
+---
+
+## 🔐 Operations & Access Control
+
+Admin wallet verification continues to exist for backend services and separate ops tools, but the production player-facing site must not surface any admin dashboards or controls.
+
+## 🗄️ Database & Persistence
+
+- **Database**: MongoDB Atlas
+- **Connection**: Use `MONGO_URI` and enforce `dbName` via `MONGO_DB_NAME` environment variable.
+- **ORM**: Mongoose (Node.js)
+
+### Schemas
+
+**User**
+- `walletAddress` (string, unique, required)
+- `unmintedHash` (number, default 0)
+- `hashBalance` (number, default 0)
+- `isAdmin` (boolean, default false)
+- `createdAt` / `updatedAt` (timestamps)
+
+**Stats**
+- `objectId` (string, required)
+- `name` (string, optional)
+- `image` (string, optional)
+- `destroyed` (number, default 0)
+- `createdAt` / `updatedAt` (timestamps)
+
+### Persistence Rules
+- When a wallet connects, backend **upserts** a `User` document keyed by `walletAddress`.
+- Gameplay events increment `unmintedHash` in the `User` record.
+- Daily mint process:
+  - Reads all `unmintedHash`
+  - Credits `hashBalance` and Vault according to tokenomics
+  - Resets `unmintedHash` to 0
+- Trade-ins update both `hashBalance` and Vault records.
+
+### Debugging & Error Handling
+- Backend is permitted to:
+  - Add `console.error` or structured logging for all DB operations
+  - Fail gracefully if MongoDB is unavailable
+  - Insert test documents during deployment for verification
