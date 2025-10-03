@@ -4,8 +4,10 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const { connectToDatabase } = require('./config/database');
-const authRoutes = require('./routes/authRoutes');
 const gameRoutes = require('./routes/gameRoutes');
+const authRoutes = require('./routes/authRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const { renderOverviewPage } = require('./controllers/adminController');
 
 const app = express();
 app.use(express.json());
@@ -45,8 +47,10 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.use('/api/auth', authRoutes);
 app.use('/api/game', gameRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.get('/admin/overview', renderOverviewPage);
 
 const PORT = process.env.PORT || 8080;
 
