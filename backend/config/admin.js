@@ -2,7 +2,18 @@ const DEFAULT_ADMIN_WALLETS = [
   "0xCd0Bc675455ee5Fa8739F5c377fe4Ec1437Bc618"
 ];
 
-const normalizeWallet = (wallet = "") => wallet.trim().toLowerCase();
+const normalizeWallet = (wallet) => {
+  if (typeof wallet !== "string") {
+    return "";
+  }
+
+  const trimmed = wallet.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  return trimmed.toLowerCase();
+};
 
 const loadAdminWallets = () => {
   const fromEnv = process.env.ADMIN_WALLETS;

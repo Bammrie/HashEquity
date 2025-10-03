@@ -33,7 +33,7 @@ This repository hosts the HashEquity gameplay frontend and the Express API that 
    ```bash
    npm run dev
    ```
-   Vite serves the app on [http://localhost:5173](http://localhost:5173). When `VITE_BACKEND_URL` is omitted the client proxies API calls to the same origin, which is useful when running behind a local reverse proxy.
+   Vite serves the app on [http://localhost:5173](http://localhost:5173). When neither `VITE_BACKEND_URL` nor the legacy `VITE_API_BASE_URL` is provided the client proxies API calls to the same origin, which is useful when running behind a local reverse proxy.
 
 ## Railway Deployment
 
@@ -53,7 +53,7 @@ Railway should host the backend and frontend as separate services:
 - **Install command:** `npm install`
 - **Build command:** `npm run build`
 - **Start command:** `npm start` (runs `vite preview --host 0.0.0.0 --port $PORT` so Railway can serve the static bundle).
-- **Environment variables:** mirror the keys in `frontend/.env.example`, especially `VITE_BACKEND_URL` pointing to the backend service URL.
+- **Environment variables:** mirror the keys in `frontend/.env.example`, especially `VITE_BACKEND_URL` (or the legacy `VITE_API_BASE_URL`) pointing to the backend service URL.
 
 ## Health & Monitoring
 
