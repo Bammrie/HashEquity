@@ -61,3 +61,41 @@ A Web3 game and token ecosystem powered by the HASH token on the Polygon (MATIC)
 ## 🔐 Operations & Access Control
 
 Admin wallet verification continues to exist for backend services and separate ops tools, but the production player-facing site must not surface any admin dashboards or controls.
+
+## 🗄️ Database & Persistence
+
+- **Database**: MongoDB Atlas
+- **Connection**: Use `MONGO_URI` and enforce `dbName` via `MONGO_DB_NAME` environment variable.
+- **ORM**: Mongoose (Node.js)
+
+### Schemas
+
+**User**
+- `walletAddress` (string, unique, required)
+- `unmintedHash` (number, default 0)
+- `hashBalance` (number, default 0)
+- `isAdmin` (boolean, default false)
+- `createdAt` / `updatedAt` (timestamps)
+
+**Stats**
+- `objectId` (string, required)
+- `name` (string, optional)
+- `image` (string, optional)
+- `destroyed` (number, default 0)
+- `createdAt` / `updatedAt` (timestamps)
+
+### Persistence Rules
+- When a wallet connects, backend **upserts** a `User` document keyed by `walletAddress`.
+- Gameplay events increment `unmintedHash` in the `User` record.
+- Daily mint process:
+  - Reads all `unmintedHash`
+  - Credits `hashBalance` and Vault according to tokenomics
+  - Resets `unmintedHash` to 0
+- Trade-ins update both `hashBalance` and Vault records.
+
+### Debugging & Error Handling
+- Backend is permitted to:
+  - Add `console.error` or structured logging for all DB operations
+  - Fail gracefully if MongoDB is unavailable
+  - Insert test documents during deployment for verification
+
