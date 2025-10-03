@@ -7,7 +7,7 @@ A Web3 game and token ecosystem powered by the HASH token on the Polygon (MATIC)
 
 ## 🚀 Overview
 
-**HashEquity** is a real-time, interactive Web3 game where users earn HASH tokens by destroying objects on screen. The game rewards players with *Unminted HASH*, which can be minted daily or traded for lower returns. The site includes a dynamic token economy, NFT reward system, a smart contract-driven admin vault (HashVault), and live global stats for transparency and competition.
+**HashEquity** is a real-time, interactive Web3 game where users earn HASH tokens by destroying objects on screen. The game rewards players with *Unminted HASH*, which can be minted daily or traded for lower returns. The site includes a dynamic token economy, NFT reward system, a smart contract-driven admin vault (HashVault), and live global stats for transparency and competition. Operations tooling lives off the main site—players never see admin dashboards in production.
 
 ---
 
@@ -58,11 +58,6 @@ A Web3 game and token ecosystem powered by the HASH token on the Polygon (MATIC)
 
 ---
 
-## 🔐 Admin Access
+## 🔐 Operations & Access Control
 
-Admin access is granted via wallet address verification:
-
-```ts
-const ADMIN_WALLETS = [
-  "0xCd0Bc675455ee5Fa8739F5c377fe4Ec1437Bc618", // Add more as needed
-];
+Admin wallet verification continues to exist for backend services and separate ops tools, but the production player-facing site must not surface any admin dashboards or controls.
