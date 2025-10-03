@@ -4,14 +4,17 @@ const POSTGRES_PREFIX = /^postgres(?:ql)?:\/\//i;
 const MONGO_PREFIX = /^mongodb(\+srv)?:\/\//i;
 
 const resolveMongoUri = () => {
-  const { MONGO_URI, DATABASE_URL } = process.env;
+  const { MONGO_URI, MONGODB_URI, MONGO_URL, MONGODB_URL, DATABASE_URL } = process.env;
 
-  if (MONGO_URI && MONGO_URI.trim()) {
-    return MONGO_URI.trim();
-  }
+  const candidates = [MONGO_URI, MONGODB_URI, MONGO_URL, MONGODB_URL, DATABASE_URL];
 
-  if (DATABASE_URL && DATABASE_URL.trim()) {
-    return DATABASE_URL.trim();
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string') {
+      const trimmed = candidate.trim();
+      if (trimmed) {
+        return trimmed;
+      }
+    }
   }
 
   return '';
@@ -20,7 +23,7 @@ const resolveMongoUri = () => {
 const assertMongoUri = (uri) => {
   if (!uri) {
     throw new Error(
-      'MongoDB connection string missing. Set MONGO_URI in Railway (or map DATABASE_URL to the same Mongo URI).'
+      'MongoDB connection string missing. Set MONGO_URI (or MONGO_URL/MONGODB_URI) in Railway, or map DATABASE_URL to the Mongo instance.'
     );
   }
 

@@ -1,52 +1,64 @@
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const { ethers } = require("ethers");
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const { ethers } = require('ethers');
 
-const User = require("../models/User");
-
-const JWT_SECRET = process.env.JWT_SECRET;
+const User = require('../models/User');
+const { getJwtSecret } = require('../utils/env');
+const { normalizeWallet, isAdminWallet } = require('../config/admin');
 
 const router = express.Router();
+const LOGIN_MESSAGE = 'Login to HashEquity';
 
-router.post("/wallet-login", async (req, res) => {
+router.post('/wallet-login', async (req, res) => {
   try {
-    if (!JWT_SECRET) {
-      return res.status(500).json({ error: "JWT secret not configured" });
+    const jwtSecret = getJwtSecret();
+    if (!jwtSecret) {
+      return res.status(500).json({ error: 'JWT secret not configured' });
     }
 
-    const { walletAddress, signature } = req.body;
+    const { walletAddress, signature } = req.body || {};
 
     if (!walletAddress || !signature) {
-      return res.status(400).json({ error: "Missing walletAddress or signature" });
+      return res.status(400).json({ error: 'Missing walletAddress or signature' });
     }
 
-    const message = "Login to HashEquity";
+    let recoveredAddress;
+    try {
+      recoveredAddress = ethers.verifyMessage(LOGIN_MESSAGE, signature);
+    } catch (verificationError) {
+      console.error('Wallet login verification error:', verificationError);
+      return res.status(400).json({ error: 'Invalid signature' });
+    }
 
-    const recoveredAddress = ethers.verifyMessage(message, signature);
     if (recoveredAddress.toLowerCase() !== walletAddress.toLowerCase()) {
-      return res.status(400).json({ error: "Invalid signature" });
+      return res.status(400).json({ error: 'Invalid signature' });
     }
 
-    const normalizedWallet = walletAddress.trim().toLowerCase();
+    const normalizedWallet = normalizeWallet(walletAddress);
+    const admin = isAdminWallet(normalizedWallet);
 
     const user = await User.findOneAndUpdate(
       { walletAddress: normalizedWallet },
-      { $setOnInsert: { walletAddress: normalizedWallet } },
+      {
+        $setOnInsert: { walletAddress: normalizedWallet, isAdmin: admin },
+        $set: { isAdmin: admin },
+      },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, {
-      expiresIn: "1d"
+    const token = jwt.sign({ id: user.id, isAdmin: admin }, jwtSecret, {
+      expiresIn: '1d',
     });
 
     res.json({
-      message: "Wallet login successful",
+      message: 'Wallet login successful',
       token,
-      walletAddress: normalizedWallet
+      walletAddress: normalizedWallet,
+      isAdmin: admin,
     });
   } catch (err) {
-    console.error("Wallet login error:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error('Wallet login error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

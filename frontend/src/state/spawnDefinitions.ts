@@ -1,104 +1,114 @@
-import hashCore from '../assets/coins/hash-core.svg';
-import prismSpark from '../assets/coins/prism-spark.svg';
-import quantumLattice from '../assets/coins/quantum-lattice.svg';
-import fluxPrism from '../assets/coins/flux-prism.svg';
-import forgeBlock from '../assets/coins/forge-block.svg';
-import novaGem from '../assets/coins/nova-gem.svg';
-import wheelToken from '../assets/coins/wheel-token.svg';
-import jackpotChip from '../assets/coins/jackpot-chip.svg';
-import plinkoDisc from '../assets/coins/plinko-disc.svg';
-import vaultEmblem from '../assets/coins/vault-emblem.svg';
+import object00 from '../assets/coins/Object0-0.png';
+import object01 from '../assets/coins/Object0-1.png';
+import object02 from '../assets/coins/Object0-2.png';
+import object03 from '../assets/coins/Object0-3.png';
+import object04 from '../assets/coins/Object0-4.png';
+import object05 from '../assets/coins/Object0-5.png';
+import object06 from '../assets/coins/Object0-6.png';
+import object07 from '../assets/coins/Object0-7.png';
+import object08 from '../assets/coins/Object0-8.png';
+import object09 from '../assets/coins/Object0-9.png';
+import object10 from '../assets/coins/Object1-0.png';
 import type { SpawnDefinition } from './gameTypes';
 
 export const spawnDefinitions: SpawnDefinition[] = [
   {
-    type: 'circle',
-    name: 'Hash Core',
-    image: hashCore,
-    size: 'medium',
-    spawnChance: 0.18,
+    type: 'object0-0',
+    name: 'Object 0-0',
+    image: object00,
+    size: 'small',
+    spawnChance: 0.5,
     reward: { type: 'unminted_hash', value: 0.00000001 },
     health: 1,
   },
   {
-    type: 'triangle',
-    name: 'Prism Spark',
-    image: prismSpark,
+    type: 'object0-1',
+    name: 'Object 0-1',
+    image: object01,
     size: 'small',
-    spawnChance: 0.12,
-    reward: { type: 'unminted_hash', value: 0.000000014 },
-    health: 1,
-  },
-  {
-    type: 'hexagon',
-    name: 'Quantum Lattice',
-    image: quantumLattice,
-    size: 'large',
-    spawnChance: 0.1,
-    reward: { type: 'unminted_hash', value: 0.000000018 },
-    health: 1,
-  },
-  {
-    type: 'prism',
-    name: 'Flux Prism',
-    image: fluxPrism,
-    size: 'small',
-    spawnChance: 0.08,
-    reward: { type: 'unminted_hash', value: 0.00000002 },
-    health: 1,
-  },
-  {
-    type: 'cube',
-    name: 'Forge Block',
-    image: forgeBlock,
-    size: 'medium',
-    spawnChance: 0.07,
-    reward: { type: 'unminted_hash', value: 0.000000024 },
-    health: 1,
-  },
-  {
-    type: 'diamond',
-    name: 'Nova Gem',
-    image: novaGem,
-    size: 'medium',
-    spawnChance: 0.1,
-    reward: { type: 'unminted_hash', value: 0.00000003 },
-    health: 1,
-  },
-  {
-    type: 'wheel',
-    name: 'Wheel Token',
-    image: wheelToken,
-    size: 'large',
-    spawnChance: 0.12,
-    reward: { type: 'mini_game', label: 'Wheel Spin' },
-    health: 1,
-  },
-  {
-    type: 'slot',
-    name: 'Jackpot Chip',
-    image: jackpotChip,
-    size: 'medium',
-    spawnChance: 0.08,
-    reward: { type: 'mini_game', label: 'Slot Rush' },
-    health: 1,
-  },
-  {
-    type: 'plinko',
-    name: 'Plinko Disc',
-    image: plinkoDisc,
-    size: 'small',
-    spawnChance: 0.08,
-    reward: { type: 'mini_game', label: 'Plinko Drop' },
-    health: 1,
-  },
-  {
-    type: 'vault',
-    name: 'Vault Emblem',
-    image: vaultEmblem,
-    size: 'large',
-    spawnChance: 0.07,
+    spawnChance: 0.2,
     reward: { type: 'unminted_hash', value: 0.00000005 },
+    health: 1,
+  },
+  {
+    type: 'object0-2',
+    name: 'Object 0-2',
+    image: object02,
+    size: 'small',
+    spawnChance: 0.13,
+    reward: { type: 'unminted_hash', value: 0.0000002 },
+    health: 2,
+  },
+  {
+    type: 'object0-3',
+    name: 'Object 0-3',
+    image: object03,
+    size: 'medium',
+    spawnChance: 0.09,
+    reward: { type: 'unminted_hash', value: 0.0000005 },
     health: 3,
+  },
+  {
+    type: 'object0-4',
+    name: 'Object 0-4',
+    image: object04,
+    size: 'medium',
+    spawnChance: 0.055,
+    reward: { type: 'unminted_hash', value: 0.000001 },
+    health: 4,
+  },
+  {
+    type: 'object0-5',
+    name: 'Object 0-5',
+    image: object05,
+    size: 'medium',
+    spawnChance: 0.019,
+    reward: { type: 'unminted_hash', value: 0.0000025 },
+    health: 5,
+  },
+  {
+    type: 'object0-6',
+    name: 'Object 0-6',
+    image: object06,
+    size: 'large',
+    spawnChance: 0.004,
+    reward: { type: 'unminted_hash', value: 0.000005 },
+    health: 6,
+  },
+  {
+    type: 'object0-7',
+    name: 'Object 0-7',
+    image: object07,
+    size: 'large',
+    spawnChance: 0.0014,
+    reward: { type: 'unminted_hash', value: 0.00001 },
+    health: 7,
+  },
+  {
+    type: 'object0-8',
+    name: 'Object 0-8',
+    image: object08,
+    size: 'large',
+    spawnChance: 0.0003,
+    reward: { type: 'unminted_hash', value: 0.000025 },
+    health: 8,
+  },
+  {
+    type: 'object0-9',
+    name: 'Object 0-9',
+    image: object09,
+    size: 'large',
+    spawnChance: 0.0002,
+    reward: { type: 'unminted_hash', value: 0.00005 },
+    health: 9,
+  },
+  {
+    type: 'object1-0',
+    name: 'Object 1-0',
+    image: object10,
+    size: 'large',
+    spawnChance: 0.0001,
+    reward: { type: 'unminted_hash', value: 0.0001 },
+    health: 10,
   },
 ];

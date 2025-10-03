@@ -48,6 +48,6 @@ VITE_BACKEND_URL=https://api.hashequity.com
 
 ## Next Steps
 
-- Wire the `tradeInForHash`, `settleDailyMint`, and spawn telemetry to backend endpoints once available
+- Wire the `tradeInForHash` and spawn telemetry to backend endpoints once available
 - Implement admin spawn table editor using the exported `spawnTableSpec`
 - Replace placeholder WalletConnect project ID with a production key before launch
