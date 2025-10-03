@@ -20,6 +20,22 @@ const resolveMongoUri = () => {
   return '';
 };
 
+const resolveMongoDbName = () => {
+  const { MONGO_DB_NAME } = process.env;
+
+  if (typeof MONGO_DB_NAME !== 'string') {
+    return undefined;
+  }
+
+  const trimmed = MONGO_DB_NAME.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  return trimmed;
+};
+
 const assertMongoUri = (uri) => {
   if (!uri) {
     throw new Error(
@@ -42,8 +58,10 @@ const connectToDatabase = async () => {
   const mongoUri = resolveMongoUri();
   assertMongoUri(mongoUri);
 
+  const dbName = resolveMongoDbName();
+
   mongoose.set('strictQuery', false);
-  await mongoose.connect(mongoUri);
+  await mongoose.connect(mongoUri, dbName ? { dbName } : undefined);
 
   return mongoose.connection;
 };

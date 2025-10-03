@@ -4,7 +4,6 @@ import { MiniGamePanel } from './components/MiniGamePanel';
 import { EventFeed } from './components/EventFeed';
 import { TopBar } from './components/TopBar';
 import { StatsPanel } from './components/StatsPanel';
-import { AdminPanel } from './components/AdminPanel';
 import styles from './App.module.css';
 
 export const App = () => (
@@ -16,7 +15,6 @@ export const App = () => (
         <MiniGamePanel />
       </div>
       <aside className={styles.sidebar}>
-        <AdminPanel />
         <EconomyPanel />
         <StatsPanel />
         <EventFeed />

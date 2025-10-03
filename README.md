@@ -9,7 +9,7 @@ This repository hosts the HashEquity gameplay frontend and the Express API that 
 
 ### Backend
 
-1. Copy `backend/.env.example` to `backend/.env` and fill in the values (at minimum `MONGO_URI` and `JWT_SECRET`).
+1. Copy `backend/.env.example` to `backend/.env` and fill in the values (at minimum `MONGO_URI` and `JWT_SECRET`; optionally set `MONGO_DB_NAME` if your Atlas cluster uses a named database).
 2. Install dependencies:
    ```bash
    cd backend
@@ -44,6 +44,7 @@ Railway should host the backend and frontend as separate services:
 - **Start command:** `npm start`
 - **Environment variables:**
   - `MONGO_URI` – MongoDB connection string (you can map `DATABASE_URL` to the same value for backwards compatibility).
+  - Optional: `MONGO_DB_NAME` when your connection string does not include the database component.
   - `JWT_SECRET` – secret used to sign wallet login tokens.
   - `PORT` – provided by Railway; the server falls back to `8080` locally.
   - Optional: `CORS_ALLOWED_ORIGINS` (comma-delimited) to restrict HTTP origins in production.
