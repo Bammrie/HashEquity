@@ -17,6 +17,7 @@ export const EconomyPanel = () => {
   const addEvent = useGameStore((state) => state.addEvent);
   const { hash, unminted, vault } = useGameStore((state) => state.balances);
   const tradeInForHash = useGameStore((state) => state.tradeInForHash);
+  const settleDailyMint = useGameStore((state) => state.settleDailyMint);
   const [tradeAmount, setTradeAmount] = useState('0.00000000');
 
   const fillMaxTrade = () => {
