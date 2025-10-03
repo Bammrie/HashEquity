@@ -2,7 +2,13 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 import { useGameStore } from '../state/gameStore';
-import { fetchBalances, tradeUnmintedHash, type TradeResponse } from '../services/gameApi';
+import {
+  fetchBalances,
+  runDailyMint,
+  tradeUnmintedHash,
+  type MintResponse,
+  type TradeResponse,
+} from '../services/gameApi';
 import styles from './EconomyPanel.module.css';
 
 export const EconomyPanel = () => {
@@ -22,6 +28,20 @@ export const EconomyPanel = () => {
     queryFn: () => fetchBalances(address!),
     enabled: Boolean(address),
     refetchInterval: 30_000,
+  });
+
+  const { mutate: settleMintMutation, isPending: isMinting } = useMutation<MintResponse, Error>({
+    mutationFn: () => runDailyMint(address!),
+    onSuccess: (result) => {
+      syncBackendBalances({
+        hashBalance: result.hashBalance,
+        unmintedHash: result.unmintedHash,
+      });
+      settleDailyMint({ mintedAmount: result.mintedAmount, vaultTax: result.vaultTax });
+    },
+    onError: (mintError) => {
+      addEvent(`Failed to settle daily mint: ${mintError.message}`);
+    },
   });
 
   const { mutate: tradeMutation, isPending: isTrading } = useMutation<TradeResponse, Error, number>({
@@ -71,7 +91,15 @@ export const EconomyPanel = () => {
     tradeMutation(Number(amount.toFixed(10)));
   };
 
-  const isBusy = isFetching || isTrading;
+  const handleMintClick = () => {
+    if (!address) {
+      addEvent('Connect a wallet before running the daily mint.');
+      return;
+    }
+    settleMintMutation();
+  };
+
+  const isBusy = isFetching || isMinting || isTrading;
 
   return (
     <section className={styles.panel}>
@@ -99,6 +127,9 @@ export const EconomyPanel = () => {
         </div>
       </dl>
       <div className={styles.actions}>
+        <button type="button" onClick={handleMintClick} disabled={!address || isBusy}>
+          {isMinting ? 'Minting...' : 'Run Daily Mint'}
+        </button>
         <form onSubmit={handleTradeSubmit} className={styles.tradeForm}>
           <label htmlFor="trade-amount">Trade In</label>
           <div className={styles.tradeInputGroup}>
@@ -111,17 +142,12 @@ export const EconomyPanel = () => {
               value={tradeAmount}
               onChange={(event) => setTradeAmount(event.target.value)}
             />
-            <button
-              type="button"
-              className={styles.maxButton}
-              onClick={fillMaxTrade}
-              disabled={!address || isBusy}
-            >
+            <button type="button" className={styles.maxButton} onClick={fillMaxTrade}>
               Max
             </button>
           </div>
-          <button type="submit" disabled={!address || isBusy}>
-            {isTrading ? 'Trading…' : 'Convert 50%'}
+          <button type="submit" disabled={isFetching}>
+            Convert 50%
           </button>
         </form>
         {address && (

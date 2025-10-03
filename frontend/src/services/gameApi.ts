@@ -19,6 +19,11 @@ type DestroyPayload = {
   objectName?: string;
   objectImage?: string;
 };
+type MintResponse = BalancesResponse & {
+  mintedAmount: number;
+  vaultTax: number;
+};
+
 type TradePayload = {
   wallet: string;
   amount: number;
@@ -100,6 +105,18 @@ export const destroyGameObject = async (payload: DestroyPayload): Promise<Balanc
   return handleResponse<BalancesResponse>(response);
 };
 
+export const runDailyMint = async (wallet: string): Promise<MintResponse> => {
+  const response = await fetch(createUrl('/mint'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ wallet }),
+  });
+  return handleResponse<MintResponse>(response);
+};
+
 export const tradeUnmintedHash = async (payload: TradePayload): Promise<TradeResponse> => {
   const response = await fetch(createUrl('/trade'), {
     method: 'POST',
@@ -116,6 +133,7 @@ export type {
   StatsEntry,
   BalancesResponse,
   DestroyPayload,
+  MintResponse,
   TradePayload,
   TradeResponse,
 };

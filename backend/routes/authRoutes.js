@@ -2,9 +2,10 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { ethers } = require('ethers');
 
-const User = require('../models/User');
-const { getJwtSecret } = require('../utils/env');
-const { normalizeWallet, isAdminWallet } = require('../config/admin');
+const User = require("../models/User");
+const { isAdminWallet, normalizeWallet } = require("../config/admin");
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const router = express.Router();
 const LOGIN_MESSAGE = 'Login to HashEquity';
@@ -13,7 +14,7 @@ router.post('/wallet-login', async (req, res) => {
   try {
     const jwtSecret = getJwtSecret();
     if (!jwtSecret) {
-      return res.status(500).json({ error: 'JWT secret not configured' });
+      return res.status(500).json({ error: "JWT secret not configured" });
     }
 
     const { walletAddress, signature } = req.body || {};
@@ -35,26 +36,26 @@ router.post('/wallet-login', async (req, res) => {
     }
 
     const normalizedWallet = normalizeWallet(walletAddress);
-    const admin = isAdminWallet(normalizedWallet);
+    const adminStatus = isAdminWallet(normalizedWallet);
 
     const user = await User.findOneAndUpdate(
       { walletAddress: normalizedWallet },
       {
-        $setOnInsert: { walletAddress: normalizedWallet, isAdmin: admin },
-        $set: { isAdmin: admin },
+        $setOnInsert: { walletAddress: normalizedWallet },
+        $set: { isAdmin: adminStatus },
       },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    const token = jwt.sign({ id: user.id, isAdmin: admin }, jwtSecret, {
-      expiresIn: '1d',
+    const token = jwt.sign({ id: user.id, isAdmin: user.isAdmin }, JWT_SECRET, {
+      expiresIn: "1d"
     });
 
     res.json({
       message: 'Wallet login successful',
       token,
       walletAddress: normalizedWallet,
-      isAdmin: admin,
+      isAdmin: user.isAdmin
     });
   } catch (err) {
     console.error('Wallet login error:', err);
