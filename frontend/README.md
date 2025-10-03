@@ -38,6 +38,8 @@ VITE_RPC_URL=https://polygon-rpc.com
 VITE_HASH_TOKEN_ADDRESS=0x...
 VITE_NFT_CONTRACT_ADDRESS=0x...
 VITE_BACKEND_URL=https://api.hashequity.com
+# Legacy fallback supported for existing deployments:
+# VITE_API_BASE_URL=https://api.hashequity.com
 ```
 
 ## Available Scripts
