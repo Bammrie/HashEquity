@@ -100,23 +100,23 @@ export const AdminPanel = () => {
 
   if (!isConnected || !address) {
     body = <p className={styles.notice}>Connect a wallet to unlock admin telemetry.</p>;
+  } else if (!isAllowlisted) {
+    body = (
+      <div className={styles.notice}>
+        <p>This wallet is not on the admin allowlist.</p>
+        {adminConfig.wallets.length > 0 && (
+          <p className={styles.allowlist}>Allowlisted wallets: {adminConfig.wallets.join(', ')}</p>
+        )}
+      </div>
+    );
   } else if (!token) {
     body = (
       <div className={styles.actions}>
         <p>Sign the login message below to view live user balances.</p>
-        {!isAllowlisted && (
-          <p className={styles.noticeWarning}>
-            This wallet is not currently on the configured allowlist. Continue to authenticate if
-            backend settings were updated.
-          </p>
-        )}
         <button type="button" onClick={handleAuthenticate} disabled={isSigning}>
           {isSigning ? 'Waiting for signature…' : 'Authenticate Admin Wallet'}
         </button>
         {authError && <p className={styles.error}>{authError}</p>}
-        {!isAllowlisted && adminConfig.wallets.length > 0 && (
-          <p className={styles.allowlist}>Allowlisted wallets: {adminConfig.wallets.join(', ')}</p>
-        )}
       </div>
     );
   } else {

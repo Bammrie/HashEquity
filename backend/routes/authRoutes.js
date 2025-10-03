@@ -4,7 +4,8 @@ const { ethers } = require("ethers");
 
 const User = require("../models/User");
 const { isAdminWallet, normalizeWallet } = require("../config/admin");
-const { getJwtSecret } = require("../config/env");
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const router = express.Router();
 
@@ -40,7 +41,7 @@ router.post("/wallet-login", async (req, res) => {
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    const token = jwt.sign({ id: user.id, isAdmin: adminStatus }, jwtSecret, {
+    const token = jwt.sign({ id: user.id, isAdmin: user.isAdmin }, JWT_SECRET, {
       expiresIn: "1d"
     });
 
@@ -48,7 +49,7 @@ router.post("/wallet-login", async (req, res) => {
       message: "Wallet login successful",
       token,
       walletAddress: normalizedWallet,
-      isAdmin: adminStatus
+      isAdmin: user.isAdmin
     });
   } catch (err) {
     console.error("Wallet login error:", err);

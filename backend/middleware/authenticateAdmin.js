@@ -2,12 +2,11 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
 
-const { getJwtSecret } = require("../config/env");
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const authenticateAdmin = async (req, res, next) => {
   try {
-    const jwtSecret = getJwtSecret();
-    if (!jwtSecret) {
+    if (!JWT_SECRET) {
       return res.status(500).json({ error: "JWT secret not configured" });
     }
 
@@ -19,7 +18,7 @@ const authenticateAdmin = async (req, res, next) => {
 
     const token = authHeader.slice("Bearer ".length).trim();
 
-    const payload = jwt.verify(token, jwtSecret);
+    const payload = jwt.verify(token, JWT_SECRET);
     if (!payload?.id) {
       return res.status(401).json({ error: "Invalid token" });
     }

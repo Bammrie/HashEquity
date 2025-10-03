@@ -50,7 +50,7 @@
   height: auto;
   display: block;
   border-radius: 50%;
-  background: none;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.6), transparent 60%);
 }
 
 @keyframes coinFloat {
