@@ -80,6 +80,10 @@ exports.destroyObject = async (req, res) => {
 
     const normalizedWallet = normalizeWallet(wallet);
 
+    if (!normalizedWallet) {
+      return res.status(400).json({ error: "Missing wallet" });
+    }
+
     const numericReward = toNumber(reward);
 
     const userUpdate = {
