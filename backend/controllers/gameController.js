@@ -1,25 +1,7 @@
 const Stats = require("../models/Stats");
 const User = require("../models/User");
 const { normalizeWallet } = require("../config/admin");
-
-const toNumber = (value) => {
-  if (typeof value === "number") {
-    return value;
-  }
-
-  const parsed = Number(value);
-  return Number.isNaN(parsed) ? 0 : parsed;
-};
-
-const toFixedAmount = (value) => {
-  const numeric = Number(value);
-
-  if (!Number.isFinite(numeric)) {
-    return 0;
-  }
-
-  return Number(numeric.toFixed(10));
-};
+const { toNumber, toFixedAmount } = require("../utils/number");
 
 const humanizeObjectId = (objectId = "") =>
   objectId
@@ -125,47 +107,6 @@ exports.destroyObject = async (req, res) => {
   } catch (err) {
     console.error("Destroy error:", err);
     res.status(500).json({ error: "Unable to record destroy" });
-  }
-};
-
-exports.settleDailyMint = async (req, res) => {
-  try {
-    const { wallet } = req.body || {};
-    const normalizedWallet = normalizeWallet(wallet);
-
-    if (!normalizedWallet) {
-      return res.status(400).json({ error: "Missing wallet" });
-    }
-
-    const user = await User.findOneAndUpdate(
-      { walletAddress: normalizedWallet },
-      { $setOnInsert: { walletAddress: normalizedWallet } },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    );
-
-    const currentUnminted = toNumber(user?.unmintedHash);
-
-    if (currentUnminted <= 0) {
-      return res.status(400).json({ error: "No unminted HASH to settle" });
-    }
-
-    const mintedAmount = toFixedAmount(currentUnminted * 0.8);
-    const vaultTax = toFixedAmount(currentUnminted * 0.2);
-
-    user.hashBalance = toFixedAmount(toNumber(user.hashBalance) + mintedAmount);
-    user.unmintedHash = 0;
-
-    await user.save();
-
-    res.json({
-      hashBalance: toNumber(user.hashBalance),
-      unmintedHash: toNumber(user.unmintedHash),
-      mintedAmount,
-      vaultTax,
-    });
-  } catch (err) {
-    console.error("Daily mint error:", err);
-    res.status(500).json({ error: "Unable to settle daily mint" });
   }
 };
 

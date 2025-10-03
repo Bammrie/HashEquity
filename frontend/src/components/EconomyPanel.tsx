@@ -2,13 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 import { useGameStore } from '../state/gameStore';
-import {
-  fetchBalances,
-  runDailyMint,
-  tradeUnmintedHash,
-  type MintResponse,
-  type TradeResponse,
-} from '../services/gameApi';
+import { fetchBalances, tradeUnmintedHash, type TradeResponse } from '../services/gameApi';
 import styles from './EconomyPanel.module.css';
 
 export const EconomyPanel = () => {
@@ -17,7 +11,6 @@ export const EconomyPanel = () => {
   const addEvent = useGameStore((state) => state.addEvent);
   const { hash, unminted, vault } = useGameStore((state) => state.balances);
   const tradeInForHash = useGameStore((state) => state.tradeInForHash);
-  const settleDailyMint = useGameStore((state) => state.settleDailyMint);
   const [tradeAmount, setTradeAmount] = useState('0.00000000');
 
   const fillMaxTrade = () => {
@@ -29,20 +22,6 @@ export const EconomyPanel = () => {
     queryFn: () => fetchBalances(address!),
     enabled: Boolean(address),
     refetchInterval: 30_000,
-  });
-
-  const { mutate: settleMintMutation, isPending: isMinting } = useMutation<MintResponse, Error>({
-    mutationFn: () => runDailyMint(address!),
-    onSuccess: (result) => {
-      syncBackendBalances({
-        hashBalance: result.hashBalance,
-        unmintedHash: result.unmintedHash,
-      });
-      settleDailyMint({ mintedAmount: result.mintedAmount, vaultTax: result.vaultTax });
-    },
-    onError: (mintError) => {
-      addEvent(`Failed to settle daily mint: ${mintError.message}`);
-    },
   });
 
   const { mutate: tradeMutation, isPending: isTrading } = useMutation<TradeResponse, Error, number>({
@@ -92,21 +71,13 @@ export const EconomyPanel = () => {
     tradeMutation(Number(amount.toFixed(10)));
   };
 
-  const handleMintClick = () => {
-    if (!address) {
-      addEvent('Connect a wallet before running the daily mint.');
-      return;
-    }
-    settleMintMutation();
-  };
-
-  const isBusy = isFetching || isMinting || isTrading;
+  const isBusy = isFetching || isTrading;
 
   return (
     <section className={styles.panel}>
       <header>
         <h2>Economy</h2>
-        <p>Daily minting taxes 20% to the Vault. Trades burn 50%.</p>
+        <p>Daily minting runs automatically and taxes 20% to the Vault. Trades burn 50%.</p>
         {address ? (
           <p className={styles.connection}>Connected wallet: {address}</p>
         ) : (
@@ -128,9 +99,6 @@ export const EconomyPanel = () => {
         </div>
       </dl>
       <div className={styles.actions}>
-        <button type="button" onClick={handleMintClick} disabled={!address || isBusy}>
-          {isMinting ? 'Minting...' : 'Run Daily Mint'}
-        </button>
         <form onSubmit={handleTradeSubmit} className={styles.tradeForm}>
           <label htmlFor="trade-amount">Trade In</label>
           <div className={styles.tradeInputGroup}>

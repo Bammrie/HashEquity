@@ -6,6 +6,7 @@ require('dotenv').config();
 const { connectToDatabase } = require('./config/database');
 const gameRoutes = require('./routes/gameRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const { initializeDailyMint } = require('./services/dailyMint');
 
 const app = express();
 app.use(express.json());
@@ -56,6 +57,8 @@ const startServer = async () => {
   try {
     await connectToDatabase();
     console.log('✅ MongoDB connected');
+
+    await initializeDailyMint();
 
     server = app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
