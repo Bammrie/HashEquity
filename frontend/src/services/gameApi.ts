@@ -36,23 +36,40 @@ type TradeResponse = BalancesResponse & {
 
 const trimTrailingSlash = (value: string) => value.replace(/\/$/, '');
 
-const explicitBackend = appEnv.backendUrl ? trimTrailingSlash(appEnv.backendUrl) : '';
+const resolveBackendBase = (): string => {
+  const explicit = appEnv.backendUrl?.trim();
+  if (explicit) {
+    return trimTrailingSlash(explicit);
+  }
 
-const fallbackBackend = (() => {
   if (typeof window === 'undefined') {
     return '';
   }
 
   const { hostname, origin } = window.location;
+  const normalizedHost = hostname.toLowerCase();
 
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+  if (normalizedHost === 'localhost' || normalizedHost === '127.0.0.1') {
+    console.warn(
+      'VITE_BACKEND_URL is not set; defaulting to local backend at http://localhost:8080.'
+    );
     return 'http://localhost:8080';
   }
 
-  return origin;
-})();
+  if (normalizedHost === 'hashequity.com' || normalizedHost.endsWith('.hashequity.com')) {
+    console.warn(
+      'VITE_BACKEND_URL is not set; defaulting to production API at https://api.hashequity.com.'
+    );
+    return 'https://api.hashequity.com';
+  }
 
-const backendBase = trimTrailingSlash(explicitBackend || fallbackBackend);
+  console.warn(
+    `VITE_BACKEND_URL is not set; defaulting to same-origin backend at ${origin}.`
+  );
+  return origin;
+};
+
+const backendBase = trimTrailingSlash(resolveBackendBase());
 const apiBase = backendBase ? `${backendBase}/api/game` : '/api/game';
 
 const createUrl = (path: string) => `${apiBase}${path}`;
