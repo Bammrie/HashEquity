@@ -5,6 +5,7 @@ import { MiniGamePanel } from './components/MiniGamePanel';
 import { TopBar } from './components/TopBar';
 import { StatsPanel } from './components/StatsPanel';
 import { LeaderboardPanel } from './components/LeaderboardPanel';
+import { InventoryPanel } from './components/InventoryPanel';
 import { useGameStore } from './state/gameStore';
 import heroCenter from './assets/coins/Object1-0.png';
 import heroOrbit from './assets/coins/Object0-6.png';
@@ -77,6 +78,7 @@ export const App = () => {
         </div>
         <aside className={styles.sidebar} id="economy">
           <EconomyPanel />
+          <InventoryPanel />
           <div id="intel">
             <StatsPanel />
           </div>

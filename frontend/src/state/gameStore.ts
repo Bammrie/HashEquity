@@ -50,6 +50,15 @@ const randomPosition = (size: SpawnDefinition['size']): ObjectPosition => {
 const randomFloatDuration = () => Number((6 + Math.random() * 4).toFixed(2));
 const randomFloatDelay = () => Number((Math.random() * 6).toFixed(2));
 
+type BackendInventoryItem = {
+  itemId?: string;
+  name?: string;
+  image?: string;
+  quantity?: number | string;
+  lastUpdatedAt?: number | string | Date;
+  description?: string | null;
+};
+
 const parseBalance = (value: number | string): number => {
   const numeric = typeof value === 'string' ? Number(value) : value;
   if (!Number.isFinite(numeric)) {
@@ -57,6 +66,91 @@ const parseBalance = (value: number | string): number => {
   }
 
   return Number(numeric.toFixed(10));
+};
+
+const resolveInventoryTimestamp = (
+  value: BackendInventoryItem['lastUpdatedAt'],
+): number => {
+  if (value instanceof Date) {
+    const timestamp = value.getTime();
+    return Number.isFinite(timestamp) ? timestamp : Date.now();
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) {
+      return numeric;
+    }
+  }
+
+  return Date.now();
+};
+
+const parseInventoryEntries = (
+  entries?: BackendInventoryItem[] | null,
+): InventoryItem[] | undefined => {
+  if (entries === undefined) {
+    return undefined;
+  }
+
+  if (!Array.isArray(entries)) {
+    return [];
+  }
+
+  const normalized: InventoryItem[] = [];
+
+  for (const entry of entries) {
+    if (!entry || typeof entry !== 'object') {
+      continue;
+    }
+
+    const itemId = typeof entry.itemId === 'string' ? entry.itemId.trim() : '';
+    if (!itemId) {
+      continue;
+    }
+
+    const name =
+      typeof entry.name === 'string' && entry.name.trim().length > 0
+        ? entry.name.trim()
+        : itemId;
+
+    const image =
+      typeof entry.image === 'string' && entry.image.trim().length > 0
+        ? entry.image
+        : '';
+
+    const rawQuantity =
+      typeof entry.quantity === 'string' ? Number(entry.quantity) : entry.quantity;
+
+    const quantity = Number.isFinite(rawQuantity) && rawQuantity !== undefined
+      ? Math.max(1, Math.floor(Number(rawQuantity)))
+      : 1;
+
+    const description =
+      typeof entry.description === 'string' && entry.description.trim().length > 0
+        ? entry.description
+        : undefined;
+
+    normalized.push({
+      itemId,
+      name,
+      image,
+      quantity,
+      lastUpdated: resolveInventoryTimestamp(entry.lastUpdatedAt),
+      description,
+    });
+  }
+
+  return normalized;
 };
 
 const createObject = (): ActiveObject => {
@@ -92,6 +186,15 @@ type EventEntry = {
   message: string;
 };
 
+export type InventoryItem = {
+  itemId: string;
+  name: string;
+  image: string;
+  quantity: number;
+  lastUpdated: number;
+  description?: string;
+};
+
 type DestroyOutcome = 'missing' | 'damaged' | 'destroyed';
 
 type GameState = {
@@ -101,6 +204,7 @@ type GameState = {
   events: EventEntry[];
   miniGame: MiniGameState | null;
   personalDestroyed: number;
+  inventory: InventoryItem[];
   destroyObject: (id: string) => DestroyOutcome;
   resolveMiniGame: () => void;
   settleDailyMint: (result: { mintedAmount: number; vaultTax: number }) => void;
@@ -110,6 +214,7 @@ type GameState = {
     unmintedHash: number | string;
     vaultHashBalance?: number | string | null;
     objectsDestroyed?: number | string;
+    inventory?: BackendInventoryItem[] | null;
   }) => void;
   addEvent: (message: string) => void;
 };
@@ -135,6 +240,7 @@ export const useGameStore = create<GameState>()(
     events: [],
     miniGame: null,
     personalDestroyed: 0,
+    inventory: [],
     destroyObject: (id) => {
       let outcome: DestroyOutcome = 'missing';
       set((state) => {
@@ -163,6 +269,7 @@ export const useGameStore = create<GameState>()(
         const balances = { ...state.balances };
         let miniGame = state.miniGame;
         let events = state.events;
+        let inventory = state.inventory;
 
         if (target.reward.type === 'unminted_hash') {
           balances.unminted = Number((balances.unminted + target.reward.value).toFixed(10));
@@ -170,7 +277,7 @@ export const useGameStore = create<GameState>()(
             events,
             `Destroyed ${target.name} for ${target.reward.value.toFixed(10)} unminted HASH.`,
           );
-        } else {
+        } else if (target.reward.type === 'mini_game') {
           const payout = miniGameRewardSequence[nextMiniGameIndex % miniGameRewardSequence.length];
           nextMiniGameIndex += 1;
           miniGame = {
@@ -179,6 +286,38 @@ export const useGameStore = create<GameState>()(
             status: 'pending',
           };
           events = pushEvent(events, `${target.reward.label} ready! Resolve to claim ${payout.toFixed(10)} HASH.`);
+        } else if (target.reward.type === 'item') {
+          const reward = target.reward;
+          const now = Date.now();
+          const existingIndex = inventory.findIndex((entry) => entry.itemId === reward.itemId);
+
+          if (existingIndex >= 0) {
+            const updated = [...inventory];
+            const existing = updated[existingIndex];
+            updated[existingIndex] = {
+              ...existing,
+              quantity: existing.quantity + 1,
+              lastUpdated: now,
+              name: reward.name,
+              image: reward.image || existing.image,
+              description: reward.description ?? existing.description,
+            };
+            inventory = updated;
+          } else {
+            inventory = [
+              ...inventory,
+              {
+                itemId: reward.itemId,
+                name: reward.name,
+                image: reward.image,
+                quantity: 1,
+                lastUpdated: now,
+                description: reward.description,
+              },
+            ];
+          }
+
+          events = pushEvent(events, `Recovered ${reward.name}. Added to your inventory.`);
         }
 
         outcome = 'destroyed';
@@ -188,6 +327,7 @@ export const useGameStore = create<GameState>()(
           balances,
           miniGame,
           events,
+          inventory,
           objectsDestroyed: state.objectsDestroyed + 1,
         };
       }, false, 'destroyObject');
@@ -251,7 +391,13 @@ export const useGameStore = create<GameState>()(
         };
       }, false, 'tradeInForHash');
     },
-    syncBackendBalances: ({ hashBalance, unmintedHash, objectsDestroyed }) => {
+    syncBackendBalances: ({
+      hashBalance,
+      unmintedHash,
+      objectsDestroyed,
+      vaultHashBalance,
+      inventory,
+    }) => {
       const parseDestroyed = (value?: number | string) => {
         if (value === undefined || value === null) {
           return undefined;
@@ -266,6 +412,7 @@ export const useGameStore = create<GameState>()(
       };
 
       const destroyed = parseDestroyed(objectsDestroyed);
+      const normalizedInventory = parseInventoryEntries(inventory);
 
       set((state) => ({
         ...state,
@@ -280,6 +427,8 @@ export const useGameStore = create<GameState>()(
         },
         objectsDestroyed:
           destroyed !== undefined ? destroyed : state.objectsDestroyed,
+        inventory:
+          normalizedInventory !== undefined ? normalizedInventory : state.inventory,
       }), false, 'syncBackendBalances');
     },
     addEvent: (message) => {
