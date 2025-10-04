@@ -39,16 +39,16 @@ export const spawnDefinitions: SpawnDefinition[] = [
     size: 'small',
     spawnChance: 0.13,
     reward: { type: 'unminted_hash', value: 0.0000002 },
-    health: 2,
+    health: 1,
   },
   {
     type: 'object0-3',
     name: 'Object 0-3',
     image: object03,
     size: 'small',
-    spawnChance: 0.09,
+    spawnChance: 0.00005,
     reward: { type: 'unminted_hash', value: 0.0000005 },
-    health: 3,
+    health: 1,
   },
   {
     type: 'object0-4',
@@ -57,7 +57,7 @@ export const spawnDefinitions: SpawnDefinition[] = [
     size: 'small',
     spawnChance: 0.055,
     reward: { type: 'unminted_hash', value: 0.000001 },
-    health: 4,
+    health: 1,
   },
   {
     type: 'object0-5',
@@ -66,7 +66,7 @@ export const spawnDefinitions: SpawnDefinition[] = [
     size: 'small',
     spawnChance: 0.019,
     reward: { type: 'unminted_hash', value: 0.0000025 },
-    health: 5,
+    health: 1,
   },
   {
     type: 'object0-6',
@@ -75,7 +75,7 @@ export const spawnDefinitions: SpawnDefinition[] = [
     size: 'small',
     spawnChance: 0.004,
     reward: { type: 'unminted_hash', value: 0.000005 },
-    health: 6,
+    health: 1,
   },
   {
     type: 'object0-7',
@@ -84,7 +84,7 @@ export const spawnDefinitions: SpawnDefinition[] = [
     size: 'small',
     spawnChance: 0.0014,
     reward: { type: 'unminted_hash', value: 0.00001 },
-    health: 7,
+    health: 1,
   },
   {
     type: 'object0-8',
@@ -93,7 +93,7 @@ export const spawnDefinitions: SpawnDefinition[] = [
     size: 'small',
     spawnChance: 0.0003,
     reward: { type: 'unminted_hash', value: 0.000025 },
-    health: 8,
+    health: 1,
   },
   {
     type: 'object0-9',
@@ -118,7 +118,7 @@ export const spawnDefinitions: SpawnDefinition[] = [
     name: 'Hash Relic Prototype',
     image: object11,
     size: 'small',
-    spawnChance: 0.00005,
+    spawnChance: 0.09,
     reward: {
       type: 'item',
       itemId: 'object1-1',
