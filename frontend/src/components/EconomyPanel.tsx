@@ -9,7 +9,12 @@ export const EconomyPanel = () => {
   const { address } = useAccount();
   const syncBackendBalances = useGameStore((state) => state.syncBackendBalances);
   const addEvent = useGameStore((state) => state.addEvent);
-  const { hash, unminted, vault } = useGameStore((state) => state.balances);
+  const { hash, unminted, vault, objectsDestroyed } = useGameStore((state) => ({
+    hash: state.balances.hash,
+    unminted: state.balances.unminted,
+    vault: state.balances.vault,
+    objectsDestroyed: state.objectsDestroyed,
+  }));
   const tradeInForHash = useGameStore((state) => state.tradeInForHash);
   const [tradeAmount, setTradeAmount] = useState('0.00000000');
 
@@ -30,6 +35,7 @@ export const EconomyPanel = () => {
       syncBackendBalances({
         hashBalance: result.hashBalance,
         unmintedHash: result.unmintedHash,
+        objectsDestroyed: result.objectsDestroyed,
       });
       tradeInForHash({ tradedAmount: result.tradedAmount, mintedAmount: result.mintedAmount });
       setTradeAmount('0.00000000');
@@ -44,6 +50,7 @@ export const EconomyPanel = () => {
       syncBackendBalances({
         hashBalance: data.hashBalance,
         unmintedHash: data.unmintedHash,
+        objectsDestroyed: data.objectsDestroyed,
       });
     }
   }, [data, syncBackendBalances]);
@@ -96,6 +103,10 @@ export const EconomyPanel = () => {
         <div>
           <dt>Vault</dt>
           <dd>{vault.toFixed(10)}</dd>
+        </div>
+        <div>
+          <dt>Objects Destroyed</dt>
+          <dd>{objectsDestroyed.toLocaleString()}</dd>
         </div>
       </dl>
       <div className={styles.actions}>
