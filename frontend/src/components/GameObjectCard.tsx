@@ -22,6 +22,7 @@ export const GameObjectCard = ({ object }: Props) => {
       syncBackendBalances({
         hashBalance: balances.hashBalance,
         unmintedHash: balances.unmintedHash,
+        objectsDestroyed: balances.objectsDestroyed,
       });
       addEvent(`Backend recorded destroy for ${variables.objectId}. Balances synced.`);
     },

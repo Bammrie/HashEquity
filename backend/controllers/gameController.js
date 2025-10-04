@@ -44,7 +44,8 @@ exports.getBalances = async (req, res) => {
 
     res.json({
       hashBalance: toNumber(user?.hashBalance),
-      unmintedHash: toNumber(user?.unmintedHash)
+      unmintedHash: toNumber(user?.unmintedHash),
+      objectsDestroyed: toNumber(user?.objectsDestroyed)
     });
   } catch (err) {
     console.error("Balance fetch error:", err);
@@ -69,11 +70,12 @@ exports.destroyObject = async (req, res) => {
     const numericReward = toNumber(reward);
 
     const userUpdate = {
-      $setOnInsert: { walletAddress: normalizedWallet }
+      $setOnInsert: { walletAddress: normalizedWallet },
+      $inc: { objectsDestroyed: 1 }
     };
 
     if (numericReward !== 0) {
-      userUpdate.$inc = { unmintedHash: numericReward };
+      userUpdate.$inc.unmintedHash = numericReward;
     }
 
     const user = await User.findOneAndUpdate(
@@ -102,7 +104,8 @@ exports.destroyObject = async (req, res) => {
 
     res.json({
       hashBalance: toNumber(user?.hashBalance),
-      unmintedHash: toNumber(user?.unmintedHash)
+      unmintedHash: toNumber(user?.unmintedHash),
+      objectsDestroyed: toNumber(user?.objectsDestroyed)
     });
   } catch (err) {
     console.error("Destroy error:", err);
@@ -148,6 +151,7 @@ exports.tradeInForHash = async (req, res) => {
     res.json({
       hashBalance: updatedHashBalance,
       unmintedHash: updatedUnminted,
+      objectsDestroyed: toNumber(user?.objectsDestroyed),
       tradedAmount: tradeAmount,
       mintedAmount,
     });

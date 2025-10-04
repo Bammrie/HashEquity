@@ -10,6 +10,7 @@ type StatsEntry = {
 type BalancesResponse = {
   hashBalance: number | string;
   unmintedHash: number | string;
+  objectsDestroyed: number | string;
 };
 
 type DestroyPayload = {

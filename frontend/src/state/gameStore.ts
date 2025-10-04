@@ -88,13 +88,18 @@ type DestroyOutcome = 'missing' | 'damaged' | 'destroyed';
 type GameState = {
   objects: ActiveObject[];
   balances: EconomyBalances;
+  objectsDestroyed: number;
   events: EventEntry[];
   miniGame: MiniGameState | null;
   destroyObject: (id: string) => DestroyOutcome;
   resolveMiniGame: () => void;
   settleDailyMint: (result: { mintedAmount: number; vaultTax: number }) => void;
   tradeInForHash: (result: { tradedAmount: number; mintedAmount: number }) => void;
-  syncBackendBalances: (payload: { hashBalance: number | string; unmintedHash: number | string }) => void;
+  syncBackendBalances: (payload: {
+    hashBalance: number | string;
+    unmintedHash: number | string;
+    objectsDestroyed?: number | string;
+  }) => void;
   addEvent: (message: string) => void;
 };
 
@@ -115,6 +120,7 @@ export const useGameStore = create<GameState>()(
       unminted: 0,
       vault: 0,
     },
+    objectsDestroyed: 0,
     events: [],
     miniGame: null,
     destroyObject: (id) => {
@@ -170,6 +176,7 @@ export const useGameStore = create<GameState>()(
           balances,
           miniGame,
           events,
+          objectsDestroyed: state.objectsDestroyed + 1,
         };
       }, false, 'destroyObject');
       return outcome;
@@ -223,7 +230,7 @@ export const useGameStore = create<GameState>()(
         };
       }, false, 'tradeInForHash');
     },
-    syncBackendBalances: ({ hashBalance, unmintedHash }) => {
+    syncBackendBalances: ({ hashBalance, unmintedHash, objectsDestroyed }) => {
       const parse = (value: number | string) => {
         const numeric = typeof value === 'string' ? Number(value) : value;
         if (!Number.isFinite(numeric)) {
@@ -239,6 +246,8 @@ export const useGameStore = create<GameState>()(
           hash: parse(hashBalance),
           unminted: parse(unmintedHash),
         },
+        objectsDestroyed:
+          objectsDestroyed !== undefined ? parse(objectsDestroyed) : state.objectsDestroyed,
       }), false, 'syncBackendBalances');
     },
     addEvent: (message) => {
