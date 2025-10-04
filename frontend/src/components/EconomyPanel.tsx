@@ -38,6 +38,7 @@ export const EconomyPanel = () => {
         unmintedHash: result.unmintedHash,
         vaultHashBalance: result.vaultHashBalance,
         objectsDestroyed: result.objectsDestroyed,
+        inventory: result.inventory,
       });
       tradeInForHash({ tradedAmount: result.tradedAmount, mintedAmount: result.mintedAmount });
       setTradeAmount('0.00000000');
@@ -54,6 +55,7 @@ export const EconomyPanel = () => {
         unmintedHash: data.unmintedHash,
         vaultHashBalance: data.vaultHashBalance,
         objectsDestroyed: data.objectsDestroyed,
+        inventory: data.inventory,
       });
     }
   }, [data, syncBackendBalances]);
