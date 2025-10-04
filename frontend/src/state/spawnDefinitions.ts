@@ -16,7 +16,7 @@ import type { SpawnDefinition } from './gameTypes';
 export const spawnDefinitions: SpawnDefinition[] = [
   {
     type: 'object0-0',
-    name: 'Object 0-0',
+    name: 'Base',
     image: object00,
     size: 'small',
     spawnChance: 0.4,
@@ -46,7 +46,7 @@ export const spawnDefinitions: SpawnDefinition[] = [
     name: 'Object 0-3',
     image: object03,
     size: 'small',
-    spawnChance: 0.00005,
+    spawnChance: 0.06005,
     reward: { type: 'unminted_hash', value: 0.0000005 },
     health: 1,
   },
@@ -55,7 +55,7 @@ export const spawnDefinitions: SpawnDefinition[] = [
     name: 'Object 0-4',
     image: object04,
     size: 'small',
-    spawnChance: 0.055,
+    spawnChance: 0.065,
     reward: { type: 'unminted_hash', value: 0.000001 },
     health: 1,
   },
@@ -64,7 +64,7 @@ export const spawnDefinitions: SpawnDefinition[] = [
     name: 'Object 0-5',
     image: object05,
     size: 'small',
-    spawnChance: 0.019,
+    spawnChance: 0.029,
     reward: { type: 'unminted_hash', value: 0.0000025 },
     health: 1,
   },
@@ -115,10 +115,10 @@ export const spawnDefinitions: SpawnDefinition[] = [
   },
   {
     type: 'object1-1',
-    name: 'Hash Relic Prototype',
+    name: 'Cotton Candy Sunrise',
     image: object11,
     size: 'small',
-    spawnChance: 0.09,
+    spawnChance: 0.01,
     reward: {
       type: 'item',
       itemId: 'object1-1',
