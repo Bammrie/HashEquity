@@ -251,7 +251,7 @@ export const useGameStore = create<GameState>()(
         };
       }, false, 'tradeInForHash');
     },
-    syncBackendBalances: ({ hashBalance, unmintedHash, objectsDestroyed }) => {
+    syncBackendBalances: ({ hashBalance, unmintedHash, objectsDestroyed, vaultHashBalance }) => {
       const parseDestroyed = (value?: number | string) => {
         if (value === undefined || value === null) {
           return undefined;
