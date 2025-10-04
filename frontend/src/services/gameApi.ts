@@ -12,17 +12,40 @@ type LeaderboardEntry = {
   objectsDestroyed: number;
 };
 
+type InventoryEntry = {
+  itemId: string;
+  name: string;
+  image: string;
+  quantity: number | string;
+  lastUpdatedAt?: number | string | Date;
+  description?: string | null;
+};
+
 type BalancesResponse = {
   hashBalance: number | string;
   unmintedHash: number | string;
   vaultHashBalance?: number | string | null;
   objectsDestroyed: number | string;
+  inventory?: InventoryEntry[] | null;
 };
+
+type DestroyRewardPayload =
+  | {
+      type: 'unminted_hash';
+      value: number;
+    }
+  | {
+      type: 'item';
+      itemId: string;
+      name: string;
+      image: string;
+      description?: string | null;
+    };
 
 type DestroyPayload = {
   wallet: string;
   objectId: string;
-  reward?: number;
+  reward?: DestroyRewardPayload;
   objectName?: string;
   objectImage?: string;
 };
@@ -150,6 +173,8 @@ export type {
   StatsEntry,
   LeaderboardEntry,
   BalancesResponse,
+  InventoryEntry,
+  DestroyRewardPayload,
   DestroyPayload,
   TradePayload,
   TradeResponse,

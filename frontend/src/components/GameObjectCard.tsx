@@ -23,6 +23,7 @@ export const GameObjectCard = ({ object }: Props) => {
         hashBalance: balances.hashBalance,
         unmintedHash: balances.unmintedHash,
         objectsDestroyed: balances.objectsDestroyed,
+        inventory: balances.inventory,
       });
       const totalDestroys = Number(balances.objectsDestroyed);
       const formattedTotal = Number.isFinite(totalDestroys)
@@ -54,17 +55,36 @@ export const GameObjectCard = ({ object }: Props) => {
       mutate({
         wallet: address,
         objectId: object.type,
-        reward: object.reward.type === 'unminted_hash' ? object.reward.value : undefined,
+        reward:
+          object.reward.type === 'unminted_hash'
+            ? { type: 'unminted_hash', value: object.reward.value }
+            : object.reward.type === 'item'
+            ? {
+                type: 'item',
+                itemId: object.reward.itemId,
+                name: object.reward.name,
+                image: object.reward.image,
+                description: object.reward.description,
+              }
+            : undefined,
         objectName: object.name,
         objectImage: object.image,
       });
     }
   };
 
-  const actionLabel =
-    object.reward.type === 'unminted_hash'
-      ? `Collect ${object.reward.value.toFixed(10)} unminted HASH from ${object.name}`
-      : `Trigger ${object.reward.label} from ${object.name}`;
+  const actionLabel = (() => {
+    switch (object.reward.type) {
+      case 'unminted_hash':
+        return `Collect ${object.reward.value.toFixed(10)} unminted HASH from ${object.name}`;
+      case 'mini_game':
+        return `Trigger ${object.reward.label} from ${object.name}`;
+      case 'item':
+        return `Collect ${object.reward.name} from ${object.name}`;
+      default:
+        return `Destroy ${object.name}`;
+    }
+  })();
 
   return (
     <button

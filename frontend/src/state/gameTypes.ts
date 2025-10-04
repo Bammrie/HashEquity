@@ -6,6 +6,13 @@ export type RewardDefinition =
   | {
       type: 'mini_game';
       label: string;
+    }
+  | {
+      type: 'item';
+      itemId: string;
+      name: string;
+      image: string;
+      description?: string;
     };
 
 export type GameObjectType =
