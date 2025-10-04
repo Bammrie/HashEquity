@@ -1,28 +1,31 @@
 .panel {
-  background: var(--surface-alt);
-  border-radius: 1rem;
-  padding: 1.5rem;
+  background: linear-gradient(150deg, rgba(15, 19, 34, 0.82), rgba(9, 12, 24, 0.78));
+  border-radius: 1.25rem;
+  padding: clamp(1.35rem, 3vw, 1.8rem);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  border: 1px solid rgba(123, 92, 255, 0.2);
+  border: 1px solid rgba(255, 187, 90, 0.12);
+  box-shadow: 0 28px 60px rgba(3, 5, 16, 0.55);
+  backdrop-filter: blur(18px);
 }
 
 .panel header h2 {
   margin: 0 0 0.25rem;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
 }
 
 .panel header p {
   margin: 0;
-  font-size: 0.85rem;
-  color: rgba(245, 248, 255, 0.65);
+  font-size: 0.9rem;
+  color: rgba(240, 244, 255, 0.7);
 }
 
 .connection {
   margin-top: 0.25rem;
   font-size: 0.8rem;
-  color: rgba(245, 248, 255, 0.75);
+  color: rgba(255, 235, 214, 0.78);
 }
 
 .metrics {
@@ -51,13 +54,21 @@
 }
 
 .actions button {
-  background: var(--accent);
-  color: #fff;
+  background: linear-gradient(120deg, #ffd661, #ff8c42);
+  color: #1a1306;
   border: none;
-  padding: 0.65rem 1rem;
-  border-radius: 0.75rem;
+  padding: 0.7rem 1.15rem;
+  border-radius: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 18px 36px rgba(255, 180, 80, 0.35);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.actions button:hover,
+.actions button:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 24px 38px rgba(255, 180, 80, 0.45);
 }
 
 .actions button:disabled {
@@ -106,12 +117,13 @@
 }
 
 .tradeForm button[type='submit'] {
-  background: rgba(123, 92, 255, 0.2);
+  background: rgba(255, 203, 118, 0.15);
   color: var(--accent);
+  border: 1px solid rgba(255, 211, 143, 0.35);
 }
 
 .refreshButton {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(245, 248, 255, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(18, 24, 40, 0.65);
+  color: rgba(245, 248, 255, 0.88);
+  border: 1px solid rgba(255, 211, 143, 0.2);
 }

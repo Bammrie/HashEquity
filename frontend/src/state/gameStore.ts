@@ -50,6 +50,15 @@ const randomPosition = (size: SpawnDefinition['size']): ObjectPosition => {
 const randomFloatDuration = () => Number((6 + Math.random() * 4).toFixed(2));
 const randomFloatDelay = () => Number((Math.random() * 6).toFixed(2));
 
+const parseBalance = (value: number | string): number => {
+  const numeric = typeof value === 'string' ? Number(value) : value;
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+
+  return Number(numeric.toFixed(10));
+};
+
 const createObject = (): ActiveObject => {
   const definition = pickSpawnDefinition();
   const id = `object-${nextObjectId++}`;
@@ -233,14 +242,6 @@ export const useGameStore = create<GameState>()(
       }, false, 'tradeInForHash');
     },
     syncBackendBalances: ({ hashBalance, unmintedHash, objectsDestroyed }) => {
-      const parse = (value: number | string) => {
-        const numeric = typeof value === 'string' ? Number(value) : value;
-        if (!Number.isFinite(numeric)) {
-          return 0;
-        }
-        return Number(numeric.toFixed(10));
-      };
-
       const parseDestroyed = (value?: number | string) => {
         if (value === undefined || value === null) {
           return undefined;
@@ -264,7 +265,7 @@ export const useGameStore = create<GameState>()(
           unminted: parseBalance(unmintedHash),
         },
         objectsDestroyed:
-          objectsDestroyed !== undefined ? parse(objectsDestroyed) : state.objectsDestroyed,
+          destroyed !== undefined ? destroyed : state.objectsDestroyed,
       }), false, 'syncBackendBalances');
     },
     addEvent: (message) => {
