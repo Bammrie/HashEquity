@@ -121,7 +121,8 @@ export const spawnDefinitions: SpawnDefinition[] = [
     spawnChance: 0.00005,
     reward: { type: 'unminted_hash', value: 0.0001 },
     health: 1,
-    {
+  },
+  {
     type: 'object1-2',
     name: 'Object 1-2',
     image: object12,
@@ -129,4 +130,5 @@ export const spawnDefinitions: SpawnDefinition[] = [
     spawnChance: 0.1,
     reward: { type: 'unminted_hash', value: 0.000000025 },
     health: 1,
+  },
 ];

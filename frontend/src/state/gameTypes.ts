@@ -19,7 +19,9 @@ export type GameObjectType =
   | 'object0-7'
   | 'object0-8'
   | 'object0-9'
-  | 'object1-0';
+  | 'object1-0'
+  | 'object1-1'
+  | 'object1-2';
 
 export type GameObjectSize = 'small' | 'medium' | 'large';
 
