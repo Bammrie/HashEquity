@@ -15,6 +15,7 @@ type LeaderboardEntry = {
 type BalancesResponse = {
   hashBalance: number | string;
   unmintedHash: number | string;
+  vaultHashBalance?: number | string | null;
   objectsDestroyed: number | string;
 };
 

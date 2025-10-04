@@ -108,6 +108,7 @@ type GameState = {
   syncBackendBalances: (payload: {
     hashBalance: number | string;
     unmintedHash: number | string;
+    vaultHashBalance?: number | string | null;
     objectsDestroyed?: number | string;
   }) => void;
   addEvent: (message: string) => void;
@@ -233,10 +234,19 @@ export const useGameStore = create<GameState>()(
       set((state) => {
         const events = pushEvent(
           state.events,
-          `Traded ${tradedAmount.toFixed(10)} unminted for ${mintedAmount.toFixed(10)} HASH.`,
+          `Traded ${tradedAmount.toFixed(10)} unminted for ${mintedAmount.toFixed(10)} HASH. Vault paid out ${mintedAmount.toFixed(10)} HASH.`,
         );
+
+        const projectedVault = Number((state.balances.vault - mintedAmount).toFixed(10));
+        const normalizedVault = Number.isFinite(projectedVault) ? projectedVault : state.balances.vault;
+        const vault = normalizedVault < 0 ? 0 : normalizedVault;
+
         return {
           ...state,
+          balances: {
+            ...state.balances,
+            vault,
+          },
           events,
         };
       }, false, 'tradeInForHash');
@@ -263,6 +273,10 @@ export const useGameStore = create<GameState>()(
           ...state.balances,
           hash: parseBalance(hashBalance),
           unminted: parseBalance(unmintedHash),
+          vault:
+            vaultHashBalance !== undefined && vaultHashBalance !== null
+              ? parseBalance(vaultHashBalance)
+              : state.balances.vault,
         },
         objectsDestroyed:
           destroyed !== undefined ? destroyed : state.objectsDestroyed,
