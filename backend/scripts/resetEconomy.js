@@ -19,7 +19,7 @@ const run = async () => {
 
     const updateResult = await User.updateMany(
       {},
-      { $set: { hashBalance: 0, unmintedHash: 0, objectsDestroyed: 0 } }
+      { $set: { hashBalance: 0, unmintedHash: 0 } }
     );
 
     const modifiedCount =

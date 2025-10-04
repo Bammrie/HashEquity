@@ -88,6 +88,7 @@ type DestroyOutcome = 'missing' | 'damaged' | 'destroyed';
 type GameState = {
   objects: ActiveObject[];
   balances: EconomyBalances;
+  objectsDestroyed: number;
   events: EventEntry[];
   miniGame: MiniGameState | null;
   personalDestroyed: number;
@@ -120,6 +121,7 @@ export const useGameStore = create<GameState>()(
       unminted: 0,
       vault: 0,
     },
+    objectsDestroyed: 0,
     events: [],
     miniGame: null,
     personalDestroyed: 0,
@@ -176,6 +178,7 @@ export const useGameStore = create<GameState>()(
           balances,
           miniGame,
           events,
+          objectsDestroyed: state.objectsDestroyed + 1,
         };
       }, false, 'destroyObject');
       return outcome;
@@ -230,7 +233,7 @@ export const useGameStore = create<GameState>()(
       }, false, 'tradeInForHash');
     },
     syncBackendBalances: ({ hashBalance, unmintedHash, objectsDestroyed }) => {
-      const parseBalance = (value: number | string) => {
+      const parse = (value: number | string) => {
         const numeric = typeof value === 'string' ? Number(value) : value;
         if (!Number.isFinite(numeric)) {
           return 0;
@@ -260,7 +263,8 @@ export const useGameStore = create<GameState>()(
           hash: parseBalance(hashBalance),
           unminted: parseBalance(unmintedHash),
         },
-        personalDestroyed: destroyed ?? state.personalDestroyed,
+        objectsDestroyed:
+          objectsDestroyed !== undefined ? parse(objectsDestroyed) : state.objectsDestroyed,
       }), false, 'syncBackendBalances');
     },
     addEvent: (message) => {

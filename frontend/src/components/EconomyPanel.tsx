@@ -9,8 +9,12 @@ export const EconomyPanel = () => {
   const { address } = useAccount();
   const syncBackendBalances = useGameStore((state) => state.syncBackendBalances);
   const addEvent = useGameStore((state) => state.addEvent);
-  const { hash, unminted, vault } = useGameStore((state) => state.balances);
-  const personalDestroyed = useGameStore((state) => state.personalDestroyed);
+  const { hash, unminted, vault, objectsDestroyed } = useGameStore((state) => ({
+    hash: state.balances.hash,
+    unminted: state.balances.unminted,
+    vault: state.balances.vault,
+    objectsDestroyed: state.objectsDestroyed,
+  }));
   const tradeInForHash = useGameStore((state) => state.tradeInForHash);
   const [tradeAmount, setTradeAmount] = useState('0.00000000');
 
@@ -102,7 +106,7 @@ export const EconomyPanel = () => {
         </div>
         <div>
           <dt>Objects Destroyed</dt>
-          <dd>{personalDestroyed.toLocaleString()}</dd>
+          <dd>{objectsDestroyed.toLocaleString()}</dd>
         </div>
       </dl>
       <div className={styles.actions}>
