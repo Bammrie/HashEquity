@@ -1,0 +1,121 @@
+.panel {
+  background: rgba(8, 12, 24, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  box-shadow: 0 20px 40px rgba(7, 10, 18, 0.35);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.header p {
+  margin: 0.45rem 0 0;
+  color: rgba(222, 230, 255, 0.68);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.empty {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(20, 26, 44, 0.75);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  color: rgba(216, 224, 255, 0.7);
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.85rem;
+  align-items: start;
+  padding: 0.8rem 0.9rem;
+  border-radius: 16px;
+  background: rgba(15, 22, 38, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.art,
+.placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  object-fit: contain;
+  background: rgba(12, 18, 32, 0.9);
+  box-shadow: 0 12px 24px rgba(6, 9, 16, 0.45);
+}
+
+.placeholder {
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.75rem;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #fff4d8;
+}
+
+.quantity {
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 214, 120, 0.9);
+  font-weight: 600;
+}
+
+.description {
+  margin: 0;
+  color: rgba(214, 222, 255, 0.72);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.timestamp {
+  font-size: 0.8rem;
+  color: rgba(173, 188, 255, 0.55);
+}
+
+@media (max-width: 520px) {
+  .entry {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .art,
+  .placeholder {
+    width: 48px;
+    height: 48px;
+  }
+}

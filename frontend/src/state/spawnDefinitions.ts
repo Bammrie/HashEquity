@@ -115,13 +115,20 @@ export const spawnDefinitions: SpawnDefinition[] = [
   },
   {
     type: 'object1-1',
-    name: 'Object 1-1',
+    name: 'Hash Relic Prototype',
     image: object11,
     size: 'small',
     spawnChance: 0.00005,
-    reward: { type: 'unminted_hash', value: 0.0001 },
+    reward: {
+      type: 'item',
+      itemId: 'object1-1',
+      name: 'Hash Relic Prototype',
+      image: object11,
+      description: 'First collectible minted from destroy rewards.',
+    },
     health: 1,
-    {
+  },
+  {
     type: 'object1-2',
     name: 'Object 1-2',
     image: object12,
@@ -129,4 +136,5 @@ export const spawnDefinitions: SpawnDefinition[] = [
     spawnChance: 0.1,
     reward: { type: 'unminted_hash', value: 0.000000025 },
     health: 1,
+  },
 ];

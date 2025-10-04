@@ -11,6 +11,84 @@ const humanizeObjectId = (objectId = "") =>
     .trim()
     .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
 
+const serializeInventory = (inventory = []) => {
+  if (!Array.isArray(inventory)) {
+    return [];
+  }
+
+  return inventory
+    .map((item) => {
+      if (!item || typeof item !== "object") {
+        return null;
+      }
+
+      const quantity = Math.max(0, Math.floor(toNumber(item.quantity)));
+      if (!item.itemId || quantity <= 0) {
+        return null;
+      }
+
+      const description = typeof item.description === "string" ? item.description : "";
+      const lastUpdatedAt = item.lastUpdatedAt instanceof Date
+        ? item.lastUpdatedAt.toISOString()
+        : item.lastUpdatedAt || new Date().toISOString();
+
+      return {
+        itemId: item.itemId,
+        name: item.name || item.itemId,
+        image: item.image || "",
+        quantity,
+        description,
+        lastUpdatedAt,
+      };
+    })
+    .filter(Boolean);
+};
+
+const normalizeDestroyReward = (reward) => {
+  if (reward === undefined || reward === null) {
+    return { type: "none" };
+  }
+
+  if (typeof reward === "number" || typeof reward === "string") {
+    const value = toNumber(reward);
+    return { type: "unminted_hash", value };
+  }
+
+  if (typeof reward === "object") {
+    const { type } = reward;
+    if (type === "unminted_hash") {
+      return { type, value: toNumber(reward.value) };
+    }
+
+    if (type === "item") {
+      const itemId = typeof reward.itemId === "string" ? reward.itemId.trim() : "";
+      if (!itemId) {
+        return { type: "none" };
+      }
+
+      const name =
+        typeof reward.name === "string" && reward.name.trim()
+          ? reward.name.trim()
+          : itemId;
+      const image = typeof reward.image === "string" ? reward.image : "";
+      const description =
+        typeof reward.description === "string" && reward.description.trim()
+          ? reward.description.trim()
+          : "";
+
+      return {
+        type: "item",
+        itemId,
+        name,
+        image,
+        description,
+      };
+    }
+  }
+
+  return { type: "none" };
+};
+
 exports.getStats = async (_req, res) => {
   try {
     const stats = await Stats.find().sort({ destroyed: -1, objectId: 1 });
@@ -45,7 +123,8 @@ exports.getBalances = async (req, res) => {
     res.json({
       hashBalance: toNumber(user?.hashBalance),
       unmintedHash: toNumber(user?.unmintedHash),
-      objectsDestroyed: toNumber(user?.objectsDestroyed)
+      objectsDestroyed: toNumber(user?.objectsDestroyed),
+      inventory: serializeInventory(user?.inventory)
     });
   } catch (err) {
     console.error("Balance fetch error:", err);
@@ -55,7 +134,7 @@ exports.getBalances = async (req, res) => {
 
 exports.destroyObject = async (req, res) => {
   try {
-    const { wallet, objectId, reward = 0, objectName, objectImage } = req.body;
+    const { wallet, objectId, reward: rewardPayload = 0, objectName, objectImage } = req.body;
 
     if (!wallet || !objectId) {
       return res.status(400).json({ error: "Missing wallet or objectId" });
@@ -67,15 +146,15 @@ exports.destroyObject = async (req, res) => {
       return res.status(400).json({ error: "Missing wallet" });
     }
 
-    const numericReward = toNumber(reward);
+    const rewardDetails = normalizeDestroyReward(rewardPayload);
 
     const userUpdate = {
       $setOnInsert: { walletAddress: normalizedWallet },
       $inc: { objectsDestroyed: 1 }
     };
 
-    if (numericReward !== 0) {
-      userUpdate.$inc.unmintedHash = numericReward;
+    if (rewardDetails.type === "unminted_hash" && rewardDetails.value !== 0) {
+      userUpdate.$inc.unmintedHash = rewardDetails.value;
     }
 
     const user = await User.findOneAndUpdate(
@@ -83,6 +162,36 @@ exports.destroyObject = async (req, res) => {
       userUpdate,
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
+
+    if (rewardDetails.type === "item" && user) {
+      const now = new Date();
+      const existing = user.inventory.find((entry) => entry.itemId === rewardDetails.itemId);
+
+      if (existing) {
+        const currentQuantity = Math.max(0, Math.floor(toNumber(existing.quantity)));
+        existing.quantity = currentQuantity + 1;
+        existing.lastUpdatedAt = now;
+        existing.name = rewardDetails.name;
+        if (rewardDetails.image) {
+          existing.image = rewardDetails.image;
+        }
+        if (rewardDetails.description) {
+          existing.description = rewardDetails.description;
+        }
+      } else {
+        user.inventory.push({
+          itemId: rewardDetails.itemId,
+          name: rewardDetails.name,
+          image: rewardDetails.image,
+          quantity: 1,
+          description: rewardDetails.description,
+          lastUpdatedAt: now,
+        });
+      }
+
+      user.markModified("inventory");
+      await user.save();
+    }
 
     const statUpdates = {};
     if (objectName) statUpdates.name = objectName;
@@ -105,7 +214,8 @@ exports.destroyObject = async (req, res) => {
     res.json({
       hashBalance: toNumber(user?.hashBalance),
       unmintedHash: toNumber(user?.unmintedHash),
-      objectsDestroyed: toNumber(user?.objectsDestroyed)
+      objectsDestroyed: toNumber(user?.objectsDestroyed),
+      inventory: serializeInventory(user?.inventory)
     });
   } catch (err) {
     console.error("Destroy error:", err);
@@ -151,10 +261,10 @@ exports.tradeInForHash = async (req, res) => {
     res.json({
       hashBalance: updatedHashBalance,
       unmintedHash: updatedUnminted,
-      objectsDestroyed: toNumber(user?.objectsDestroyed),
       tradedAmount: tradeAmount,
       mintedAmount,
-      objectsDestroyed: toNumber(user?.objectsDestroyed)
+      objectsDestroyed: toNumber(user?.objectsDestroyed),
+      inventory: serializeInventory(user?.inventory)
     });
   } catch (err) {
     console.error("Trade-in error:", err);
