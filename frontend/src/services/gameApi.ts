@@ -7,9 +7,15 @@ type StatsEntry = {
   destroyed: number;
 };
 
+type LeaderboardEntry = {
+  walletAddress: string;
+  objectsDestroyed: number;
+};
+
 type BalancesResponse = {
   hashBalance: number | string;
   unmintedHash: number | string;
+  objectsDestroyed: number | string;
 };
 
 type DestroyPayload = {
@@ -19,11 +25,6 @@ type DestroyPayload = {
   objectName?: string;
   objectImage?: string;
 };
-type MintResponse = BalancesResponse & {
-  mintedAmount: number;
-  vaultTax: number;
-};
-
 type TradePayload = {
   wallet: string;
   amount: number;
@@ -99,6 +100,16 @@ export const fetchGameStats = async (): Promise<StatsEntry[]> => {
   return handleResponse<StatsEntry[]>(response);
 };
 
+export const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
+  const response = await fetch(createUrl('/leaderboard'), {
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+
+  return handleResponse<LeaderboardEntry[]>(response);
+};
+
 export const fetchBalances = async (wallet: string): Promise<BalancesResponse> => {
   const url = `${createUrl('/balances')}?wallet=${encodeURIComponent(wallet)}`;
 
@@ -122,18 +133,6 @@ export const destroyGameObject = async (payload: DestroyPayload): Promise<Balanc
   return handleResponse<BalancesResponse>(response);
 };
 
-export const runDailyMint = async (wallet: string): Promise<MintResponse> => {
-  const response = await fetch(createUrl('/mint'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify({ wallet }),
-  });
-  return handleResponse<MintResponse>(response);
-};
-
 export const tradeUnmintedHash = async (payload: TradePayload): Promise<TradeResponse> => {
   const response = await fetch(createUrl('/trade'), {
     method: 'POST',
@@ -148,9 +147,9 @@ export const tradeUnmintedHash = async (payload: TradePayload): Promise<TradeRes
 
 export type {
   StatsEntry,
+  LeaderboardEntry,
   BalancesResponse,
   DestroyPayload,
-  MintResponse,
   TradePayload,
   TradeResponse,
 };

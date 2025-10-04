@@ -22,8 +22,16 @@ export const GameObjectCard = ({ object }: Props) => {
       syncBackendBalances({
         hashBalance: balances.hashBalance,
         unmintedHash: balances.unmintedHash,
+        objectsDestroyed: balances.objectsDestroyed,
       });
-      addEvent(`Backend recorded destroy for ${variables.objectId}. Balances synced.`);
+      const totalDestroys = Number(balances.objectsDestroyed);
+      const formattedTotal = Number.isFinite(totalDestroys)
+        ? totalDestroys.toLocaleString()
+        : '0';
+
+      addEvent(
+        `Backend recorded destroy for ${variables.objectId}. Total destroys: ${formattedTotal}.`,
+      );
     },
     onError: (error) => {
       addEvent(`Failed to sync destroy with backend: ${error.message}`);

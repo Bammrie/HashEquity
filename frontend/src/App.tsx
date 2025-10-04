@@ -1,9 +1,9 @@
 import { GameBoard } from './components/GameBoard';
 import { EconomyPanel } from './components/EconomyPanel';
 import { MiniGamePanel } from './components/MiniGamePanel';
-import { EventFeed } from './components/EventFeed';
 import { TopBar } from './components/TopBar';
 import { StatsPanel } from './components/StatsPanel';
+import { LeaderboardPanel } from './components/LeaderboardPanel';
 import styles from './App.module.css';
 
 export const App = () => (
@@ -12,12 +12,12 @@ export const App = () => (
     <main className={styles.mainContent}>
       <div className={styles.primaryColumn}>
         <GameBoard />
+        <LeaderboardPanel />
         <MiniGamePanel />
       </div>
       <aside className={styles.sidebar}>
         <EconomyPanel />
         <StatsPanel />
-        <EventFeed />
       </aside>
     </main>
   </div>

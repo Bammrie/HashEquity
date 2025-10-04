@@ -1,25 +1,9 @@
 const Stats = require("../models/Stats");
 const User = require("../models/User");
 const { normalizeWallet } = require("../config/admin");
+const { toNumber, toFixedAmount } = require("../utils/number");
 
-const toNumber = (value) => {
-  if (typeof value === "number") {
-    return value;
-  }
-
-  const parsed = Number(value);
-  return Number.isNaN(parsed) ? 0 : parsed;
-};
-
-const toFixedAmount = (value) => {
-  const numeric = Number(value);
-
-  if (!Number.isFinite(numeric)) {
-    return 0;
-  }
-
-  return Number(numeric.toFixed(10));
-};
+const LEADERBOARD_LIMIT = 100;
 
 const humanizeObjectId = (objectId = "") =>
   objectId
@@ -62,7 +46,8 @@ exports.getBalances = async (req, res) => {
 
     res.json({
       hashBalance: toNumber(user?.hashBalance),
-      unmintedHash: toNumber(user?.unmintedHash)
+      unmintedHash: toNumber(user?.unmintedHash),
+      objectsDestroyed: toNumber(user?.objectsDestroyed)
     });
   } catch (err) {
     console.error("Balance fetch error:", err);
@@ -87,11 +72,12 @@ exports.destroyObject = async (req, res) => {
     const numericReward = toNumber(reward);
 
     const userUpdate = {
-      $setOnInsert: { walletAddress: normalizedWallet }
+      $setOnInsert: { walletAddress: normalizedWallet },
+      $inc: { objectsDestroyed: 1 }
     };
 
     if (numericReward !== 0) {
-      userUpdate.$inc = { unmintedHash: numericReward };
+      userUpdate.$inc.unmintedHash = numericReward;
     }
 
     const user = await User.findOneAndUpdate(
@@ -120,52 +106,12 @@ exports.destroyObject = async (req, res) => {
 
     res.json({
       hashBalance: toNumber(user?.hashBalance),
-      unmintedHash: toNumber(user?.unmintedHash)
+      unmintedHash: toNumber(user?.unmintedHash),
+      objectsDestroyed: toNumber(user?.objectsDestroyed)
     });
   } catch (err) {
     console.error("Destroy error:", err);
     res.status(500).json({ error: "Unable to record destroy" });
-  }
-};
-
-exports.settleDailyMint = async (req, res) => {
-  try {
-    const { wallet } = req.body || {};
-    const normalizedWallet = normalizeWallet(wallet);
-
-    if (!normalizedWallet) {
-      return res.status(400).json({ error: "Missing wallet" });
-    }
-
-    const user = await User.findOneAndUpdate(
-      { walletAddress: normalizedWallet },
-      { $setOnInsert: { walletAddress: normalizedWallet } },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    );
-
-    const currentUnminted = toNumber(user?.unmintedHash);
-
-    if (currentUnminted <= 0) {
-      return res.status(400).json({ error: "No unminted HASH to settle" });
-    }
-
-    const mintedAmount = toFixedAmount(currentUnminted * 0.8);
-    const vaultTax = toFixedAmount(currentUnminted * 0.2);
-
-    user.hashBalance = toFixedAmount(toNumber(user.hashBalance) + mintedAmount);
-    user.unmintedHash = 0;
-
-    await user.save();
-
-    res.json({
-      hashBalance: toNumber(user.hashBalance),
-      unmintedHash: toNumber(user.unmintedHash),
-      mintedAmount,
-      vaultTax,
-    });
-  } catch (err) {
-    console.error("Daily mint error:", err);
-    res.status(500).json({ error: "Unable to settle daily mint" });
   }
 };
 
@@ -209,9 +155,30 @@ exports.tradeInForHash = async (req, res) => {
       unmintedHash: updatedUnminted,
       tradedAmount: tradeAmount,
       mintedAmount,
+      objectsDestroyed: toNumber(user?.objectsDestroyed)
     });
   } catch (err) {
     console.error("Trade-in error:", err);
     res.status(500).json({ error: "Unable to trade unminted HASH" });
+  }
+};
+
+exports.getLeaderboard = async (_req, res) => {
+  try {
+    const users = await User.find()
+      .select(["walletAddress", "objectsDestroyed"])
+      .sort({ objectsDestroyed: -1, walletAddress: 1 })
+      .limit(LEADERBOARD_LIMIT)
+      .lean();
+
+    const leaderboard = users.map((user) => ({
+      walletAddress: user.walletAddress,
+      objectsDestroyed: toNumber(user.objectsDestroyed)
+    }));
+
+    res.json(leaderboard);
+  } catch (err) {
+    console.error("Leaderboard fetch error:", err);
+    res.status(500).json({ error: "Unable to load leaderboard" });
   }
 };

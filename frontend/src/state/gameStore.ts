@@ -90,11 +90,16 @@ type GameState = {
   balances: EconomyBalances;
   events: EventEntry[];
   miniGame: MiniGameState | null;
+  personalDestroyed: number;
   destroyObject: (id: string) => DestroyOutcome;
   resolveMiniGame: () => void;
   settleDailyMint: (result: { mintedAmount: number; vaultTax: number }) => void;
   tradeInForHash: (result: { tradedAmount: number; mintedAmount: number }) => void;
-  syncBackendBalances: (payload: { hashBalance: number | string; unmintedHash: number | string }) => void;
+  syncBackendBalances: (payload: {
+    hashBalance: number | string;
+    unmintedHash: number | string;
+    objectsDestroyed?: number | string;
+  }) => void;
   addEvent: (message: string) => void;
 };
 
@@ -117,6 +122,7 @@ export const useGameStore = create<GameState>()(
     },
     events: [],
     miniGame: null,
+    personalDestroyed: 0,
     destroyObject: (id) => {
       let outcome: DestroyOutcome = 'missing';
       set((state) => {
@@ -223,8 +229,8 @@ export const useGameStore = create<GameState>()(
         };
       }, false, 'tradeInForHash');
     },
-    syncBackendBalances: ({ hashBalance, unmintedHash }) => {
-      const parse = (value: number | string) => {
+    syncBackendBalances: ({ hashBalance, unmintedHash, objectsDestroyed }) => {
+      const parseBalance = (value: number | string) => {
         const numeric = typeof value === 'string' ? Number(value) : value;
         if (!Number.isFinite(numeric)) {
           return 0;
@@ -232,13 +238,29 @@ export const useGameStore = create<GameState>()(
         return Number(numeric.toFixed(10));
       };
 
+      const parseDestroyed = (value?: number | string) => {
+        if (value === undefined || value === null) {
+          return undefined;
+        }
+
+        const numeric = typeof value === 'string' ? Number(value) : value;
+        if (!Number.isFinite(numeric)) {
+          return undefined;
+        }
+
+        return Math.max(0, Math.floor(numeric));
+      };
+
+      const destroyed = parseDestroyed(objectsDestroyed);
+
       set((state) => ({
         ...state,
         balances: {
           ...state.balances,
-          hash: parse(hashBalance),
-          unminted: parse(unmintedHash),
+          hash: parseBalance(hashBalance),
+          unminted: parseBalance(unmintedHash),
         },
+        personalDestroyed: destroyed ?? state.personalDestroyed,
       }), false, 'syncBackendBalances');
     },
     addEvent: (message) => {

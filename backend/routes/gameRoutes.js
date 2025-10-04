@@ -5,8 +5,8 @@ const router = express.Router();
 
 router.get("/stats", gameController.getStats);
 router.get("/balances", gameController.getBalances);
+router.get("/leaderboard", gameController.getLeaderboard);
 router.post("/destroy", gameController.destroyObject);
-router.post("/mint", gameController.settleDailyMint);
 router.post("/trade", gameController.tradeInForHash);
 
 module.exports = router;
