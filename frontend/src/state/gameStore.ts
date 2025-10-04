@@ -91,6 +91,7 @@ type GameState = {
   objectsDestroyed: number;
   events: EventEntry[];
   miniGame: MiniGameState | null;
+  personalDestroyed: number;
   destroyObject: (id: string) => DestroyOutcome;
   resolveMiniGame: () => void;
   settleDailyMint: (result: { mintedAmount: number; vaultTax: number }) => void;
@@ -123,6 +124,7 @@ export const useGameStore = create<GameState>()(
     objectsDestroyed: 0,
     events: [],
     miniGame: null,
+    personalDestroyed: 0,
     destroyObject: (id) => {
       let outcome: DestroyOutcome = 'missing';
       set((state) => {
@@ -239,12 +241,27 @@ export const useGameStore = create<GameState>()(
         return Number(numeric.toFixed(10));
       };
 
+      const parseDestroyed = (value?: number | string) => {
+        if (value === undefined || value === null) {
+          return undefined;
+        }
+
+        const numeric = typeof value === 'string' ? Number(value) : value;
+        if (!Number.isFinite(numeric)) {
+          return undefined;
+        }
+
+        return Math.max(0, Math.floor(numeric));
+      };
+
+      const destroyed = parseDestroyed(objectsDestroyed);
+
       set((state) => ({
         ...state,
         balances: {
           ...state.balances,
-          hash: parse(hashBalance),
-          unminted: parse(unmintedHash),
+          hash: parseBalance(hashBalance),
+          unminted: parseBalance(unmintedHash),
         },
         objectsDestroyed:
           objectsDestroyed !== undefined ? parse(objectsDestroyed) : state.objectsDestroyed,

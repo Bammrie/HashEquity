@@ -7,6 +7,11 @@ type StatsEntry = {
   destroyed: number;
 };
 
+type LeaderboardEntry = {
+  walletAddress: string;
+  objectsDestroyed: number;
+};
+
 type BalancesResponse = {
   hashBalance: number | string;
   unmintedHash: number | string;
@@ -95,6 +100,16 @@ export const fetchGameStats = async (): Promise<StatsEntry[]> => {
   return handleResponse<StatsEntry[]>(response);
 };
 
+export const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
+  const response = await fetch(createUrl('/leaderboard'), {
+    headers: {
+      Accept: 'application/json',
+    },
+  });
+
+  return handleResponse<LeaderboardEntry[]>(response);
+};
+
 export const fetchBalances = async (wallet: string): Promise<BalancesResponse> => {
   const url = `${createUrl('/balances')}?wallet=${encodeURIComponent(wallet)}`;
 
@@ -132,6 +147,7 @@ export const tradeUnmintedHash = async (payload: TradePayload): Promise<TradeRes
 
 export type {
   StatsEntry,
+  LeaderboardEntry,
   BalancesResponse,
   DestroyPayload,
   TradePayload,

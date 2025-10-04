@@ -154,9 +154,30 @@ exports.tradeInForHash = async (req, res) => {
       objectsDestroyed: toNumber(user?.objectsDestroyed),
       tradedAmount: tradeAmount,
       mintedAmount,
+      objectsDestroyed: toNumber(user?.objectsDestroyed)
     });
   } catch (err) {
     console.error("Trade-in error:", err);
     res.status(500).json({ error: "Unable to trade unminted HASH" });
+  }
+};
+
+exports.getLeaderboard = async (_req, res) => {
+  try {
+    const users = await User.find()
+      .select(["walletAddress", "objectsDestroyed"])
+      .sort({ objectsDestroyed: -1, walletAddress: 1 })
+      .limit(LEADERBOARD_LIMIT)
+      .lean();
+
+    const leaderboard = users.map((user) => ({
+      walletAddress: user.walletAddress,
+      objectsDestroyed: toNumber(user.objectsDestroyed)
+    }));
+
+    res.json(leaderboard);
+  } catch (err) {
+    console.error("Leaderboard fetch error:", err);
+    res.status(500).json({ error: "Unable to load leaderboard" });
   }
 };
