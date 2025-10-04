@@ -3,7 +3,9 @@
   border: none;
   background: none;
   padding: 0;
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transform: translate(-50%, -50%);
   cursor: pointer;
   animation-name: coinFloat;
@@ -12,6 +14,9 @@
   transition:
     transform 0.35s ease;
   z-index: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  clip-path: circle(50%);
 }
 
 .coin:hover,
@@ -47,7 +52,7 @@
   height: auto;
   display: block;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.6), transparent 60%);
+  background: none;
 }
 
 @keyframes coinFloat {
