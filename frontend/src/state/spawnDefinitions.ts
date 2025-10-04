@@ -11,6 +11,16 @@ import object09 from '../assets/coins/Object0-9.png';
 import object10 from '../assets/coins/Object1-0.png';
 import object11 from '../assets/coins/Object1-1.png';
 import object12 from '../assets/coins/Object1-2.png';
+import fluxPrism from '../assets/coins/flux-prism.svg';
+import forgeBlock from '../assets/coins/forge-block.svg';
+import hashCore from '../assets/coins/hash-core.svg';
+import jackpotChip from '../assets/coins/jackpot-chip.svg';
+import novaGem from '../assets/coins/nova-gem.svg';
+import plinkoDisc from '../assets/coins/plinko-disc.svg';
+import prismSpark from '../assets/coins/prism-spark.svg';
+import quantumLattice from '../assets/coins/quantum-lattice.svg';
+import vaultEmblem from '../assets/coins/vault-emblem.svg';
+import wheelToken from '../assets/coins/wheel-token.svg';
 import type { SpawnDefinition } from './gameTypes';
 
 export const spawnDefinitions: SpawnDefinition[] = [
@@ -19,7 +29,7 @@ export const spawnDefinitions: SpawnDefinition[] = [
     name: 'Object 0-0',
     image: object00,
     size: 'small',
-    spawnChance: 0.4,
+    spawnChance: 0.39,
     reward: { type: 'unminted_hash', value: 0.00000001 },
     health: 1,
   },
@@ -115,13 +125,20 @@ export const spawnDefinitions: SpawnDefinition[] = [
   },
   {
     type: 'object1-1',
-    name: 'Object 1-1',
+    name: 'Hash Relic Prototype',
     image: object11,
     size: 'small',
     spawnChance: 0.00005,
-    reward: { type: 'unminted_hash', value: 0.0001 },
+    reward: {
+      type: 'item',
+      itemId: 'object1-1',
+      name: 'Hash Relic Prototype',
+      image: object11,
+      description: 'First collectible minted from destroy rewards.',
+    },
     health: 1,
-    {
+  },
+  {
     type: 'object1-2',
     name: 'Object 1-2',
     image: object12,
@@ -129,4 +146,155 @@ export const spawnDefinitions: SpawnDefinition[] = [
     spawnChance: 0.1,
     reward: { type: 'unminted_hash', value: 0.000000025 },
     health: 1,
+  },
+  {
+    type: 'flux-prism',
+    name: 'Flux Prism',
+    image: fluxPrism,
+    size: 'small',
+    spawnChance: 0.001,
+    reward: {
+      type: 'item',
+      itemId: 'flux-prism',
+      name: 'Flux Prism',
+      image: fluxPrism,
+      description: 'A refracted shard humming with multidimensional energy.',
+    },
+    health: 1,
+  },
+  {
+    type: 'forge-block',
+    name: 'Forge Block',
+    image: forgeBlock,
+    size: 'small',
+    spawnChance: 0.001,
+    reward: {
+      type: 'item',
+      itemId: 'forge-block',
+      name: 'Forge Block',
+      image: forgeBlock,
+      description: 'Residual alloy from the earliest HASH minting prototypes.',
+    },
+    health: 1,
+  },
+  {
+    type: 'hash-core',
+    name: 'HASH Core',
+    image: hashCore,
+    size: 'small',
+    spawnChance: 0.001,
+    reward: {
+      type: 'item',
+      itemId: 'hash-core',
+      name: 'HASH Core',
+      image: hashCore,
+      description: 'A stabilized micro-reactor that powers the Vault engines.',
+    },
+    health: 1,
+  },
+  {
+    type: 'jackpot-chip',
+    name: 'Jackpot Chip',
+    image: jackpotChip,
+    size: 'small',
+    spawnChance: 0.001,
+    reward: {
+      type: 'item',
+      itemId: 'jackpot-chip',
+      name: 'Jackpot Chip',
+      image: jackpotChip,
+      description: 'Lucky vault casino chip rumored to double future payouts.',
+    },
+    health: 1,
+  },
+  {
+    type: 'nova-gem',
+    name: 'Nova Gem',
+    image: novaGem,
+    size: 'small',
+    spawnChance: 0.001,
+    reward: {
+      type: 'item',
+      itemId: 'nova-gem',
+      name: 'Nova Gem',
+      image: novaGem,
+      description: 'Compressed starfire crystal from the HashEquity nebula mines.',
+    },
+    health: 1,
+  },
+  {
+    type: 'plinko-disc',
+    name: 'Plinko Disc',
+    image: plinkoDisc,
+    size: 'small',
+    spawnChance: 0.001,
+    reward: {
+      type: 'item',
+      itemId: 'plinko-disc',
+      name: 'Plinko Disc',
+      image: plinkoDisc,
+      description: 'Collector disc from the first Vault-side plinko tournament.',
+    },
+    health: 1,
+  },
+  {
+    type: 'prism-spark',
+    name: 'Prism Spark',
+    image: prismSpark,
+    size: 'small',
+    spawnChance: 0.001,
+    reward: {
+      type: 'item',
+      itemId: 'prism-spark',
+      name: 'Prism Spark',
+      image: prismSpark,
+      description: 'Captured lightning from a HASH resonance cascade.',
+    },
+    health: 1,
+  },
+  {
+    type: 'quantum-lattice',
+    name: 'Quantum Lattice',
+    image: quantumLattice,
+    size: 'small',
+    spawnChance: 0.001,
+    reward: {
+      type: 'item',
+      itemId: 'quantum-lattice',
+      name: 'Quantum Lattice',
+      image: quantumLattice,
+      description: 'Intricate frame used to stabilize volatile HASH experiments.',
+    },
+    health: 1,
+  },
+  {
+    type: 'vault-emblem',
+    name: 'Vault Emblem',
+    image: vaultEmblem,
+    size: 'small',
+    spawnChance: 0.001,
+    reward: {
+      type: 'item',
+      itemId: 'vault-emblem',
+      name: 'Vault Emblem',
+      image: vaultEmblem,
+      description: 'Prestige badge issued to keepers of the HashVault.',
+    },
+    health: 1,
+  },
+  {
+    type: 'wheel-token',
+    name: 'Wheel Token',
+    image: wheelToken,
+    size: 'small',
+    spawnChance: 0.001,
+    reward: {
+      type: 'item',
+      itemId: 'wheel-token',
+      name: 'Wheel Token',
+      image: wheelToken,
+      description: 'Redeemable token for future Vault wheel spins.',
+    },
+    health: 1,
+  },
 ];
