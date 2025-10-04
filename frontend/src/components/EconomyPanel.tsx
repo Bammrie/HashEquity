@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 import { useGameStore } from '../state/gameStore';
@@ -17,11 +17,6 @@ export const EconomyPanel = () => {
     objectsDestroyed: state.objectsDestroyed,
   }));
   const tradeInForHash = useGameStore((state) => state.tradeInForHash);
-  const [tradeAmount, setTradeAmount] = useState('0.00000000');
-
-  const fillMaxTrade = () => {
-    setTradeAmount(unminted.toFixed(10));
-  };
 
   const { data, isFetching, refetch, error } = useQuery({
     queryKey: ['balances', address],
@@ -41,7 +36,6 @@ export const EconomyPanel = () => {
         inventory: result.inventory,
       });
       tradeInForHash({ tradedAmount: result.tradedAmount, mintedAmount: result.mintedAmount });
-      setTradeAmount('0.00000000');
     },
     onError: (tradeError) => {
       addEvent(`Failed to trade in: ${tradeError.message}`);
@@ -66,21 +60,18 @@ export const EconomyPanel = () => {
     }
   }, [error, addEvent]);
 
-  const handleTradeSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const amount = Number(tradeAmount);
-    if (Number.isNaN(amount)) {
-      return;
-    }
-    if (amount <= 0) {
-      addEvent('Enter an amount greater than zero to trade in.');
-      return;
-    }
+  const handleTradeAll = () => {
     if (!address) {
       addEvent('Connect a wallet before trading in unminted HASH.');
       return;
     }
-    tradeMutation(Number(amount.toFixed(10)));
+
+    if (unminted <= 0) {
+      addEvent('No unminted HASH available to trade.');
+      return;
+    }
+
+    tradeMutation(Number(unminted.toFixed(10)));
   };
 
   const isBusy = isFetching || isTrading;
@@ -119,26 +110,14 @@ export const EconomyPanel = () => {
         </div>
       </dl>
       <div className={styles.actions}>
-        <form onSubmit={handleTradeSubmit} className={styles.tradeForm}>
-          <label htmlFor="trade-amount">Trade In</label>
-          <div className={styles.tradeInputGroup}>
-            <input
-              id="trade-amount"
-              name="trade-amount"
-              type="number"
-              step="0.00000001"
-              min="0"
-              value={tradeAmount}
-              onChange={(event) => setTradeAmount(event.target.value)}
-            />
-            <button type="button" className={styles.maxButton} onClick={fillMaxTrade}>
-              Max
-            </button>
-          </div>
-          <button type="submit" disabled={isFetching}>
-            Convert 50%
-          </button>
-        </form>
+        <button
+          type="button"
+          className={styles.tradeButton}
+          onClick={handleTradeAll}
+          disabled={isBusy || unminted <= 0}
+        >
+          Convert All Unminted HASH (50% payout)
+        </button>
         {address && (
           <button
             type="button"
