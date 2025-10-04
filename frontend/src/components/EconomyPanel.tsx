@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 import { useGameStore } from '../state/gameStore';
+import vaultEmblem from '../assets/coins/vault-emblem.svg';
 import { fetchBalances, tradeUnmintedHash, type TradeResponse } from '../services/gameApi';
 import styles from './EconomyPanel.module.css';
 
@@ -35,6 +36,7 @@ export const EconomyPanel = () => {
       syncBackendBalances({
         hashBalance: result.hashBalance,
         unmintedHash: result.unmintedHash,
+        vaultHashBalance: result.vaultHashBalance,
         objectsDestroyed: result.objectsDestroyed,
       });
       tradeInForHash({ tradedAmount: result.tradedAmount, mintedAmount: result.mintedAmount });
@@ -50,6 +52,7 @@ export const EconomyPanel = () => {
       syncBackendBalances({
         hashBalance: data.hashBalance,
         unmintedHash: data.unmintedHash,
+        vaultHashBalance: data.vaultHashBalance,
         objectsDestroyed: data.objectsDestroyed,
       });
     }
@@ -91,6 +94,14 @@ export const EconomyPanel = () => {
           <p className={styles.connection}>Connect a wallet to sync live balances.</p>
         )}
       </header>
+      <div className={styles.vaultSpotlight}>
+        <img src={vaultEmblem} alt="HashVault emblem" className={styles.vaultEmblem} />
+        <div className={styles.vaultContent}>
+          <span className={styles.vaultLabel}>HashVault Reserves</span>
+          <strong className={styles.vaultValue}>{vault.toFixed(10)} HASH</strong>
+          <span className={styles.vaultCaption}>Pays out 50% trades & collects the daily mint tax.</span>
+        </div>
+      </div>
       <dl className={styles.metrics}>
         <div>
           <dt>HASH</dt>
@@ -99,10 +110,6 @@ export const EconomyPanel = () => {
         <div>
           <dt>Unminted HASH</dt>
           <dd>{unminted.toFixed(10)}</dd>
-        </div>
-        <div>
-          <dt>Vault</dt>
-          <dd>{vault.toFixed(10)}</dd>
         </div>
         <div>
           <dt>Objects Destroyed</dt>
