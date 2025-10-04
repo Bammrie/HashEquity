@@ -391,7 +391,13 @@ export const useGameStore = create<GameState>()(
         };
       }, false, 'tradeInForHash');
     },
-    syncBackendBalances: ({ hashBalance, unmintedHash, objectsDestroyed, vaultHashBalance }) => {
+    syncBackendBalances: ({
+      hashBalance,
+      unmintedHash,
+      objectsDestroyed,
+      vaultHashBalance,
+      inventory: backendInventory,
+    }) => {
       const parseDestroyed = (value?: number | string) => {
         if (value === undefined || value === null) {
           return undefined;
@@ -406,7 +412,7 @@ export const useGameStore = create<GameState>()(
       };
 
       const destroyed = parseDestroyed(objectsDestroyed);
-      const normalizedInventory = parseInventoryEntries(inventory);
+      const normalizedInventory = parseInventoryEntries(backendInventory);
 
       set((state) => ({
         ...state,
