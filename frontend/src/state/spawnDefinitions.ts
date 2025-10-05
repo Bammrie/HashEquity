@@ -124,7 +124,7 @@ export const spawnDefinitions: SpawnDefinition[] = [
       itemId: 'object1-1',
       name: 'Hash Relic Prototype',
       image: object11,
-      description: 'A rare coin treasured for it's beautiful background!',
+      description: 'A rare coin treasured for its beautiful background!',
     },
     health: 1,
   },

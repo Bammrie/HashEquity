@@ -1,5 +1,5 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import logo from '../assets/coins/hash-core.svg';
+import logo from '../assets/branding/Logo.png';
 import styles from './TopBar.module.css';
 
 export const TopBar = () => (
