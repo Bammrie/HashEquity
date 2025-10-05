@@ -3,6 +3,8 @@ const User = require("../models/User");
 const { normalizeWallet } = require("../config/admin");
 const { toNumber, toFixedAmount } = require("../utils/number");
 
+const LEADERBOARD_LIMIT = 100;
+
 const humanizeObjectId = (objectId = "") =>
   objectId
     .replace(/[-_]+/g, " ")
